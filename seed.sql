@@ -3,3 +3,6 @@ INSERT INTO harmonies (type) VALUES
 ('split-complementary'),
 ('triad'),
 ('analogous');
+
+INSERT INTO users (id, username) VALUES
+(0, 'anon');

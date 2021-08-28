@@ -29,7 +29,7 @@ CREATE TABLE IF NOT EXISTS categories (
 CREATE TABLE IF NOT EXISTS image_categories(
   id SERIAL PRIMARY KEY, 
   image_id INTEGER REFERENCES images(id),
-  category_id INTEGER REFERENCES catergories(id)
+  category_id INTEGER REFERENCES categories(id)
 );
 
 CREATE TABLE IF NOT EXISTS harmonies(

@@ -1,0 +1,10 @@
+<%- include('header', {title: `Upload`}); -%>
+  <body >
+   <%- include('nav', locals.numVisitors); -%>
+    <form action="/uploadurl" method="post" enctype="multipart/form-data">
+      <label for="imgUrl">Image Url:</label><br />
+      <input type="text" id="imgUrl" name="imgUrl" /><br />
+      <input type="submit" value="Submit" />
+    </form>
+  </body>
+</html>
