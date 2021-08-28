@@ -5,19 +5,13 @@
         <a href="/" class="nav-link">Show All</a>
       </li>
       <li class="nav-item">
-        <a href="/species/all" class="nav-link">Species</a>
-      </li>
-      <li class="nav-item">
-        <a href="/behaviours" class="nav-link">behaviors</a>
-      </li>
-      <li class="nav-item">
         <a href="/favs" class="nav-link">Favs</a>
       </li>
       <li class="nav-item">
-        <a href="/note" class="nav-link">Add</a>
+        <a href="/add" class="nav-link">Add</a>
       </li>
       <li class="nav-item">
-        <a href="/users" class="nav-link">Contributors</a>
+        <a href="/explore" class="nav-link">Explore</a>
       </li>
       <li class="nav-item">
         <a href="/signup" class="nav-link">Sign-up</a>
@@ -25,7 +19,6 @@
       <li class="nav-item">
         <a href="/login" class="nav-link">Log-in</a>
       </li>
-
       <li class="nav-item">
          <form
             action="/logout?_method=DELETE"
@@ -35,12 +28,6 @@
           >
           <a href="javascript:;" onclick="document.getElementById('form1').submit();" class="nav-link" >Log-out</a>
         </form>
-      </li>
-
-      <% if (locals.numVisitors){ %> 
-      <li class="nav-item ms-auto">
-        <a class="nav-link ">Visitor No.  <%=locals.numVisitors  %> </a>
-       <%  } %> 
       </li>
     </ul>
   </ul>
