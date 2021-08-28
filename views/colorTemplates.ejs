@@ -1,0 +1,14 @@
+<%- include('header', {title: `Upload`}); -%>
+  <body >
+   <%- include('nav', locals.numVisitors); -%>
+   <img src="<%= imageSrc %>" alt="target-image" class="target-img">
+   <!-- <img src="./hello.jpg" alt="target-image" class="target-img"> -->
+    <div class="swatches">
+      <% colors.forEach((color)=>{ %> 
+      <div class="swatch" style="background-color: rgb(<%=color.join()%>);"></div>
+      <% }) %>
+    </div>
+  </body>
+</html>
+
+

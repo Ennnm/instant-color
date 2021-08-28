@@ -6,7 +6,12 @@ import pg from 'pg';
 import jsSHA from 'jssha';
 import dotenv from 'dotenv';
 import multer from 'multer';
+import sharp from 'sharp';
+import fs from 'fs';
 
+import {
+  insertImage, insertColors, processImage, imgFilePath,
+} from './aa-sql.mjs';
 import { downloadImg, rgbToHex } from './color-mani.mjs';
 
 dotenv.config({ silent: process.env.NODE_ENV === 'production' });
@@ -20,6 +25,7 @@ app.use(cookieParser());
 
 app.use(express.urlencoded({ extended: false }));
 app.use(express.static('public'));
+app.use(express.static('uploads'));
 // app.use((request, response, next) => {
 //   console.log('Every request:', request.path);
 //   next();
@@ -51,13 +57,16 @@ const pool = new Pool(pgConnectionConfigs);
 
 const { SALT } = process.env;
 
-const mutlerUpload = multer({ dest: 'uploads/' });
+const storage = multer.diskStorage({
+  destination(req, file, cb) {
+    cb(null, 'uploads/');
+  },
+  filename(req, file, cb) {
+    cb(null, `${Date.now()}.jpg`);
+  },
+});
 
-const imgFilePath = (filename) => `./downloads/${filename}.jpg`;
-
-const url = 'https://images.unsplash.com/photo-1630082900894-edbd503588f7?ixid=MnwxMjA3fDB8MHxlZGl0b3JpYWwtZmVlZHw3fHx8ZW58MHx8fHw%3D&ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60';
-
-// const imgFp = downloadImg(url, imgFilePath('moduletdest'));
+const mutlerUpload = multer({ dest: 'uploads/', storage });
 
 const indexHandler = (req, res) => {
   res.redirect('/uploadjpg');
@@ -68,50 +77,25 @@ const jpgHandler = (req, res) => {
   res.render('uploadjpg');
 };
 
-const acceptJpg = (req, res) => {
-  console.log(req.file);
+const acceptJpg = async (req, res) => {
+  fs.access('./uploads', (error) => {
+    if (error)
+    {
+      fs.mkdirSync('./uploads');
+    }
+  });
   const { user } = req.cookies;
   const { category } = req.body;
+  const { buffer, filename, originalname } = req.file;
+  console.log('file name', req.file);
+  const ref = `${new Date().toISOString}-${filename}`;
+  await sharp(filename).resize(1000).jpeg({ quality: 80 });
+  // await sharp(buffer).jpeg({ quality: 20 }).toFile(imgFilePath(ref));
+  const imageObj = await processImage(pool, filename, category, user);
 
-  async function insertImage(filename, category = '', username = '')
-  { // find user id from username
-    let userId = 0;
-    if (username)
-    {
-      const { rows } = await pool.query('SELECT id FROM users WHERE username = $1',
-        [username]);
-      userId = rows[0].id;
-    }
+  res.render('colorTemplates', imageObj);
 
-    const { rows } = await pool.query('INSERT INTO images (users_id, path) VALUES ($1, $2) RETURNING id',
-      [userId, req.file.filename]);
-    const imageId = rows[0].id;
-    // find if category exist, if not insert new category, return index
-    let categoryId;
-    if (category)
-    {
-      const { rows } = await pool.query('SELECT id FROM categories WHERE category=$1',
-        [category]);
-
-      if (rows.length > 0) categoryId = rows[0].id;
-      else {
-        const { rows } = await pool.query('INSERT INTO categories (category) VALUES ($1) RETURNING id',
-          [category]);
-        categoryId = rows[0].id;
-      }
-      // insert into image_category
-
-      await pool.query('INSERT INTO image_categories (image_id, category_id) VALUES ($1, $2)',
-        [imageId, categoryId]);
-    }
-
-    // calculate bascolors
-
-    // sqlQuery;
-  }
-  insertImage(req.file.filename, category, user);
   // render next page with image and analyze templates
-  res.render('uploadjpg');
 };
 const urlHandler = (req, res) => {
   res.render('uploadurl');
