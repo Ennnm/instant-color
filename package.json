@@ -26,8 +26,10 @@
   },
   "dependencies": {
     "color-convert": "^2.0.1",
+    "colord": "^2.7.0",
     "colorthief": "^2.3.2",
     "cookie-parser": "^1.4.5",
+    "d3-color": "^3.0.1",
     "dotenv": "^10.0.0",
     "ejs": "^3.1.5",
     "express": "^4.17.1",

@@ -86,12 +86,7 @@ const acceptJpg = async (req, res) => {
   });
   const { user } = req.cookies;
   const { category } = req.body;
-  const {
-    filename, originalname, path,
-  } = req.file;
-  console.log('file name', req.file);
-  const ref = `${Date.now()}.jpg`;
-  console.log('ref', ref);
+  const { filename, path } = req.file;
   await sharp(`./${path}`)
     .resize(500, 500, {
       fit: sharp.fit.inside,
@@ -101,12 +96,7 @@ const acceptJpg = async (req, res) => {
     .toBuffer((err, buffer) => {
       fs.writeFile(`./${path}`, buffer, (e) => { if (e)console.error(e); });
     });
-  // .then(console.log('resize success!'));
-  // .catch((err) => console.error(err)));
-  // .toFile(imgFilePath(ref)).then(console.log('sucess in resizing'))
-  // .catch((err) => console.error(err));
-  // await sharp(filename).resize(1000).jpeg({ quality: 80 });
-  // await sharp(buffer).jpeg({ quality: 20 }).toFile(imgFilePath(ref));
+
   const imageObj = await processImage(pool, filename, category, user);
 
   res.render('colorTemplates', imageObj);

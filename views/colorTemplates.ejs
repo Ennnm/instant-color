@@ -4,9 +4,49 @@
    <img src="<%= imageSrc %>" alt="target-image" class="target-img">
    <!-- <img src="./hello.jpg" alt="target-image" class="target-img"> -->
     <div class="swatches">
-      <% colors.forEach((color)=>{ %> 
-      <div class="swatch" style="background-color: rgb(<%=color.join()%>);"></div>
-      <% }) %>
+      <% colors.base.forEach((color)=>{ %> 
+      <div class="swatch" style="background-color: <%=color%>;"></div>
+      <% }) %>base
+    </div>
+    <!-- <div class="swatches">
+      <% colors.pureHues.forEach((color)=>{ %> 
+      <div class="swatch" style="background-color: <%=color%>;"></div>
+      <% }) %>pure hues
+    </div> -->
+    <div class="swatches">
+      <% colors.analogous.forEach((color)=>{ %> 
+      <div class="swatch" style="background-color: <%=color%>;"></div>
+      <% }) %>analogous
+    </div>
+    <div class="swatches">
+      <% colors.complementary.forEach((color)=>{ %> 
+      <div class="swatch" style="background-color: <%=color%>;"></div>
+      <% }) %>complementary
+    </div>
+    <div class="swatches">
+      <% colors.dblSplitComplement.forEach((color)=>{ %> 
+      <div class="swatch" style="background-color: <%=color%>;"></div>
+      <% }) %>dblSplitComplement
+    </div>
+    <div class="swatches">
+      <% colors.rectangle.forEach((color)=>{ %> 
+      <div class="swatch" style="background-color: <%=color%>;"></div>
+      <% }) %>rectangle
+    </div>
+    <div class="swatches">
+      <% colors.splitComplementary.forEach((color)=>{ %> 
+      <div class="swatch" style="background-color: <%=color%>;"></div>
+      <% }) %>splitComplementary
+    </div>
+    <div class="swatches">
+      <% colors.tetradic.forEach((color)=>{ %> 
+      <div class="swatch" style="background-color: <%=color%>;"></div>
+      <% }) %>tetradic
+    </div>
+    <div class="swatches">
+      <% colors.triadic.forEach((color)=>{ %> 
+      <div class="swatch" style="background-color: <%=color%>;"></div>
+      <% }) %>triadic
     </div>
   </body>
 </html>
