@@ -56,17 +56,29 @@ const repeatArr = (arr, length) => {
   {
     const index = i % arr.length;
     const arrColor = arr[index];
+    // const color = { ...arr[index] };
     const color = {
       h: arrColor.h,
-      s: arrColor.s + 10 * (i + 1),
-      l: arrColor.l + 10 * (i + 1),
+      s: arrColor.s + 20 * i,
+      l: arrColor.l - 20 * i,
     };
     newArr.push(color);
   }
   return newArr;
 };
 
-const matchSatLight = (refColors, modColors, weight) => {
+const arrangeArray = (arr, centerColor) => {
+  const centerColIdx = arr.findIndex((c) => (c.h === centerColor.h && c.s === centerColor.s && c.l === centerColor.l));
+  console.log('index at : ', centerColIdx);
+  const arrCopy = [...arr];
+  console.log('org arr: ', arrCopy);
+  const lastHalf = arrCopy.splice(centerColIdx, Math.ceil(arrCopy.length / 2));
+  const newArray = [...arrCopy, ...lastHalf];
+  console.log('new arr: ', newArray);
+  return newArray;
+};
+
+const adjustSatLight = (refColors, modColors, weight) => {
   if (refColors.length !== modColors.length)
   {
     console.error('Color arrays are not the of the same length');
@@ -75,11 +87,18 @@ const matchSatLight = (refColors, modColors, weight) => {
   const newColors = [];
   for (let i = 0; i < modColors.length; i += 1)
   {
-    const newColor = {
-      h: modColors[i].h,
-      s: modColors[i].s * (1 - weight) + refColors[i].s * weight,
-      l: modColors[i].l * (1 - weight) + refColors[i].l * weight,
-    };
+    let newColor;
+    if (i === Math.floor(refColors.length / 2))
+    {
+      newColor = { ...modColors[i] };
+    }
+    else {
+      newColor = {
+        h: modColors[i].h,
+        s: modColors[i].s * (1 - weight) + refColors[i].s * weight,
+        l: modColors[i].l * (1 - weight) + refColors[i].l * weight,
+      };
+    }
     newColors.push(newColor);
   }
   return newColors;
@@ -91,7 +110,8 @@ const tuneHarmonies = (type, num, refHsl, refHslColors, satLightWeight) =>
 
   let harmonicSet = brightestColor.harmonies(type).map((col) => col.toHsl());
   harmonicSet = repeatArr(harmonicSet, num);
-  harmonicSet = matchSatLight(refHslColors, harmonicSet, satLightWeight);
+  harmonicSet = arrangeArray(harmonicSet, refHsl);
+  harmonicSet = adjustSatLight(refHslColors, harmonicSet, satLightWeight);
   return harmonicSet;
 };
 
@@ -100,14 +120,16 @@ export async function insertColors(pool, imageId, filepath, num)
   const colors = await ColorThief.getPalette(filepath, num * 2);
   let hslColors = colors.map((c) => colord(`rgb(${c.join()})`).toHsl());
   hslColors = hslColors.filter((c) => c.l > 20 && c.l < 90).slice(0, 5);
-  const hexColors = hslColors.map((c) => colord(c).toHex());
+  let hexColors = hslColors.map((c) => colord(c).toHex());
   // assume brightest color s: near 100, l: near 50, smallest deviation
   const sampleSize = 3;
   const deviationFromPurity = hslColors.slice(0, num).map((hsl) => (100 - hsl.s) + (Math.abs(hsl.l - 50)));
-
+  console.log('deviations ', deviationFromPurity);
   const indexOfBrightest = deviationFromPurity.indexOf(Math.min(...deviationFromPurity));
-
+  const lastHalfHexColors = hexColors.splice(indexOfBrightest, Math.ceil(num / 2));
+  hexColors = [...hexColors, ...lastHalfHexColors];
   const satLightWeight = 0.7;
+  console.log('brightest index at : ', indexOfBrightest);
 
   let pureHues = hslColors.map((hsl) => ({ h: hsl.h, s: 100, l: 50 }));
   let analogous = tuneHarmonies('analogous', 5, hslColors[indexOfBrightest], hslColors, satLightWeight);
