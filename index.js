@@ -10,7 +10,7 @@ import sharp from 'sharp';
 import fs from 'fs';
 
 import {
-  insertImage, insertColors, processImage, imgFilePath,
+  insertImage, processImage, imgFilePath,
 } from './aa-sql.mjs';
 import { downloadImg, rgbToHex } from './color-mani.mjs';
 
@@ -84,7 +84,7 @@ const acceptJpg = async (req, res) => {
       fs.mkdirSync('./uploads');
     }
   });
-  const { user } = req.cookies;
+  const { user, loggedIn } = req.cookies;
   const { category } = req.body;
   const { filename, path } = req.file;
   await sharp(`./${path}`)

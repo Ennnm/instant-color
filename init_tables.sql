@@ -39,22 +39,25 @@ CREATE TABLE IF NOT EXISTS harmonies(
 
 CREATE TABLE IF NOT EXISTS color_templates(
   id SERIAL PRIMARY KEY, 
-  hex_color1 char(6),
-  hex_color2 char(6),
-  hex_color3 char(6),
-  hex_color4 char(6),
-  hex_color5 char(6)
+  hex_color1 char(7),
+  hex_color2 char(7),
+  hex_color3 char(7),
+  hex_color4 char(7),
+  hex_color5 char(7)
 );
 
 CREATE TABLE IF NOT EXISTS base_colors(
   image_id INTEGER REFERENCES images(id),
   closest_harmony INTEGER REFERENCES harmonies(id),
-  template_id INTEGER REFERENCES color_templates(id)
+  template_id INTEGER REFERENCES color_templates(id),
+  main_hue SMALLINT CONSTRAINT within_hue_range CHECK (main_hue >= 0 AND main_hue <= 360) 
 );
 
 CREATE TABLE IF NOT EXISTS harmony_colors(
   id SERIAL PRIMARY KEY, 
   image_id INTEGER REFERENCES images(id),
   harmony_id SMALLINT REFERENCES harmonies(id),
-  template_id INTEGER REFERENCES color_templates(id)
+  template_id INTEGER REFERENCES color_templates(id),
+  -- difference from base_colors
+  base_diff SMALLINT
 );

@@ -15,19 +15,33 @@ extend([harmonies, lchPlugin]);
 
 // console.log(lchColors);
 
-const rgbs = [
-  [60, 12, 84],
-  [72, 20, 10],
-  [28, 35, 35],
-  [32, 25, 45],
-  [39, 8, 51],
-  [32, 19, 58],
-  [90, 8, 39],
-  [55, 7, 66],
-  [38, 19, 63],
-  [0, 0, 39],
-];
+// const rgbs = [
+//   [60, 12, 84],
+//   [72, 20, 10],
+//   [28, 35, 35],
+//   [32, 25, 45],
+//   [39, 8, 51],
+//   [32, 19, 58],
+//   [90, 8, 39],
+//   [55, 7, 66],
+//   [38, 19, 63],
+//   [0, 0, 39],
+// ];
 
-const hexColors = rgbs.map((rgb) => colord(`rgb(${rgb.join()})`).toHex());
+// const hexColors = rgbs.map((rgb) => colord(`rgb(${rgb.join()})`).toHex());
 
-console.log(hexColors);
+// console.log(hexColors);
+
+const shiftArr = (arr, num) => {
+  const newArr = [];
+  const numShift = arr.length - num;
+  for (let i = 0; i < arr.length; i += 1)
+  {
+    const index = (i + numShift) % arr.length;
+    newArr.push(arr[index]);
+  }
+  return newArr;
+};
+
+const res = shiftArr([1, 2, 3, 4, 5], 2);
+console.log(res);
