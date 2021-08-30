@@ -6,6 +6,7 @@ import ColorThief from 'colorthief';
 import { colord, extend } from 'colord';
 import harmonies from 'colord/plugins/harmonies';
 import lchPlugin from 'colord/plugins/lch';
+import { watchFile } from 'fs';
 
 extend([harmonies, lchPlugin]);
 
@@ -150,19 +151,19 @@ const calcDiffFrHarmony = (refHueDiffs, harmonyInvs) =>
       {
         hueDiff = 360 - hueDiff;
       }
-      console.log('refHueDiff - harmony = hueDiff', refHueDiff, harmony, hueDiff);
+      // console.log('refHueDiff - harmony = hueDiff', refHueDiff, harmony, hueDiff);
       return hueDiff;
     });
-    console.log('diffFromRef', diffFromRef);
+    // console.log('diffFromRef', diffFromRef);
 
     differences.push(Math.min(...diffFromRef));
   }
-  console.log('differences', differences);
+  // console.log('differences', differences);
   const sumDiff = differences.reduce((a, b) => a + b, 0);
-  console.log('sumDiff', sumDiff);
+  // console.log('sumDiff', sumDiff);
   return sumDiff;
 };
-const calcClosestHarmony = (refHsl) => {
+const calHarmonyDiff = (refHsl) => {
   // for colorarrays that have been sorted
   const colorDiffs = refHsl.map((col) => {
     let hueDiff = Math.abs(col.h - refHsl[0].h);
@@ -212,7 +213,7 @@ export async function getColorTemplates(pool, imageId, filepath, num)
   const tetradic = tuneHarmonies('tetradic', 5, brightestHsl, hslColors, satLightWeight);
   const triadic = tuneHarmonies('triadic', 5, brightestHsl, hslColors, satLightWeight);
 
-  // console.log('color diffs', calcClosestHarmony(hslColors));
+  // console.log('color diffs', calHarmonyDiff(hslColors));
 
   console.log('hsl', hslColors);
   const palettes = {
@@ -229,24 +230,96 @@ export async function getColorTemplates(pool, imageId, filepath, num)
   // return colors;
   return palettes;
 }
+const covertHslToHex = (hsl) => hsl.map((c) => colord(c).toHex());
 
-const convertToHex = (palettes) => {
+const convertObjToHex = (palettes) => {
   const hexPalette = {};
   for (const [harmony, col] of Object.entries(palettes)) {
-    hexPalette[harmony] = col.map((c) => colord(c).toHex());
+    hexPalette[harmony] = covertHslToHex(col);
   }
   return hexPalette;
 };
 
+async function insertColorTemplate(pool, hexCols)
+{
+  const sqlQuery = 'INSERT INTO color_templates (hex_color1, hex_color2, hex_color3, hex_color4, hex_color5) VALUES ($1, $2, $3, $4, $5) RETURNING id';
+
+  const { rows } = await pool.query(sqlQuery, hexCols);
+  return rows[0].id;
+}
+
+const convertHarmonyName = (objHarmony) => {
+  let harmonyInTable;
+  switch (objHarmony) {
+    case 'dblSplitComplement':
+      harmonyInTable = 'double-split-complementary';
+      break;
+    case 'splitComplementary':
+      harmonyInTable = 'split-complementary';
+      break;
+    default:
+      harmonyInTable = objHarmony;
+      break;
+  }
+  return harmonyInTable;
+};
+async function insertBaseColor(pool, imageId, closestHarmony, baseColorsHex, mainHue)
+{
+  const colTempId = await insertColorTemplate(pool, baseColorsHex);
+
+  const harmonyInTable = convertHarmonyName(closestHarmony);
+  pool
+    .query('SELECT id FROM harmonies WHERE type = $1', [harmonyInTable])
+    .then((result) => {
+      const harmonyId = result.rows[0].id;
+      return pool
+        .query('INSERT INTO base_colors (image_id, closest_harmony, template_id, main_hue) VALUES ($1, $2, $3, $4) RETURNING *', [imageId, harmonyId, colTempId, mainHue]);
+    }).then((result) => { console.log('succeeded in inserting base color', result.rows); })
+    .catch((error) => {
+      console.error(error);
+    });
+}
+async function insertHarmonyColor(pool, imageId, harmony, harmonyColors, diffFromBase)
+{
+  const colorTempId = await insertColorTemplate(pool, harmonyColors);
+
+  const harmonyInTable = convertHarmonyName(harmony);
+  pool
+    .query('SELECT id FROM harmonies WHERE type = $1', [harmonyInTable])
+    .then((result) => {
+      const harmonyId = result.rows[0].id;
+      return pool
+        .query('INSERT INTO harmony_colors (image_id, harmony_id, template_id, base_diff) VALUES ($1, $2, $3, $4) RETURNING *', [imageId, harmonyId, colorTempId, diffFromBase]);
+    }).then((result) => { console.log('succeeded in inserting harmony color', result.rows); })
+    .catch((error) => {
+      console.error(error);
+    });
+}
+
 export async function processImage(pool, filename, category, user)
 {
-  const imageId = await insertImage(pool, filename, category, user);
-  // extract color
   const filePath = imgFilePath(filename);
-  // const colors = await ColorThief.getPalette(filePath, 5);
-  const hslColors = await getColorTemplates(pool, imageId, filePath, 5);
-  // console.log('color diffs', calcClosestHarmony(hslColors));
-  const colors = convertToHex(hslColors);
+  let imageId = insertImage(pool, filename, category, user);
+  let hslColors = getColorTemplates(pool, imageId, filePath, 5);
+
+  const values = await Promise.all([imageId, hslColors]);
+  [imageId, hslColors] = values;
+  const baseColors = hslColors.base;
+
+  const harmonicDiffs = calHarmonyDiff(baseColors);
+  const closestHarmony = harmonicDiffs[0];
+  const furthestHarmony = harmonicDiffs[harmonicDiffs.length - 1];
+
+  const closestColors = hslColors[closestHarmony.harmony];
+  const furthestColors = hslColors[furthestHarmony.harmony];
+  await insertBaseColor(pool, imageId, closestHarmony.harmony, covertHslToHex(baseColors), baseColors[0].h);
+  const insertClosestCol = insertHarmonyColor(pool, imageId, closestHarmony.harmony, covertHslToHex(closestColors), closestHarmony.value);
+  const insertFurthestCol = insertHarmonyColor(pool, imageId, furthestHarmony.harmony, covertHslToHex(furthestColors), furthestHarmony.value);
+
+  await Promise.all([insertClosestCol, insertFurthestCol]);
+
+  console.log(harmonicDiffs);
+  const colors = convertObjToHex(hslColors);
 
   return { imageSrc: filename, colors };
 }
