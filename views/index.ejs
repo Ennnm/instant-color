@@ -3,16 +3,14 @@
    <%- include('nav', locals.numVisitors); -%>
    <div class=" card-columns">
     <% locals.posts.forEach((post, index)=>{%>
-        <% console.log('in index', post.hue) %> 
         <div class="card bg-light border d-inline-block " id="item-<%=post.id%>">
           <div class="card-body">
-             <%-include('image-card', post.imageSrc, post.createdat, post.baseHarmony, post.hue, post.harmonies, post.harmonicDiff, post.colTemplates); -%>
-            <!-- <%- include('note-header', note); -%> -->
+             <%-include('image-card', post); -%>
             <div class="btn-group flex-wrap">
-              <a href="/note/<%=post.id%>"  class="btn btn-outline-secondary btn-sm stretched-link">Expand</a>
-              <a href="/note/<%=post.id%>/edit"  class="btn btn-outline-secondary btn-sm">Edit</a>
+              <a href="/picture/<%=post.id%>"  class="btn btn-outline-secondary btn-sm stretched-link">Expand</a>
+              <a href="/picture/<%=post.id%>/edit"  class="btn btn-outline-secondary btn-sm">Edit</a>
               <form
-                action="/note/<%=post.id%>/delete?_method=DELETE"
+                action="/picture/<%=post.id%>/delete?_method=DELETE"
                 method="POST"
                 class="d-inline-block"
               >

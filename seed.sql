@@ -5,7 +5,7 @@ INSERT INTO harmonies (type) VALUES
 ('rectangle'),
 ('split-complementary'),
 ('tetradic'),
-('triad');
+('triadic');
 
 
 INSERT INTO users (id, username) VALUES

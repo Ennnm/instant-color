@@ -207,6 +207,7 @@ const getColorsFromImgId = async (pool, id, getHarmonyCols) => {
         // res.render('post', postObj);
         return;
       }
+      postObj.id = id;
       postObj.imageSrc = result.rows[0].path;
       postObj.userid = result.rows[0].users_id;
       postObj.createdat = result.rows[0].created_at;
@@ -230,7 +231,7 @@ const getColorsFromImgId = async (pool, id, getHarmonyCols) => {
       if (getHarmonyCols)
       {
         postObj.harmonicDiff = [postObj.harmonicDiff[0], ...postObj.harmonicDiff];
-        console.log(postObj.harmonies);
+        // console.log(postObj.harmonies);
         harmonyColProp.forEach((h) => {
           colTempQueries.push(pool.query('SELECT * FROM color_templates WHERE id = $1', [h.template_id]));
         });
@@ -247,7 +248,7 @@ const getColorsFromImgId = async (pool, id, getHarmonyCols) => {
       postObj.colTemplates = hexCol;
     })
     .catch((e) => console.error(e));
-  console.log('postObj', postObj);
+  // console.log('postObj', postObj);
   return postObj;
 };
 
@@ -269,7 +270,7 @@ const indexHandler = async (req, res) => {
   });
 
   const posts = await Promise.all(poolPromises);
-  console.log('posts', posts);
+  // console.log('posts', posts);
   // copy all index from birdwatching
   // render contents in each card
   // each card needs an expand button
