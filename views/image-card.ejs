@@ -1,0 +1,26 @@
+<div class='container col-12 col-md-8 col-lg-6 col-xl-4 -bg-light border mt-4  justify-content-center '>
+  <div class="col p-3">
+    <div class="row d-flex justify-content-between">
+      <span>Hue: <%=hue%>/360</span>
+      <span><%=baseHarmony%></span>
+      <span>Δ <%=harmonicDiff[0]%></span>
+      <span>Created <%=createdat.toISOString().split('T')[0]%></span>
+      <!-- category -->
+      <!-- <span>Δ <%=harmonicDiff[0]%></span> -->
+    </div>
+  <div class="row">
+    <img src="../<%= imageSrc %>" class="img-fluid" alt="target-image" class="target-img">
+  </div class="mt-1">
+    <% harmonies.forEach((h, index)=>{ %>
+      <div class="row swatches mt-1">
+        <% colTemplates[index].forEach((color)=>{ %>
+          <div class="swatch" style="background-color: <%=color%>;"></div>
+        <% }) %> 
+      </div>
+        <div class="row d-flex justify-content-between">
+          <span><%=h%></span>
+          <span>Δ <%=harmonicDiff[index]%></span>
+        </div>
+    <% }) %>
+  </div>
+</div>

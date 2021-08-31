@@ -6,7 +6,8 @@ import ColorThief from 'colorthief';
 import { colord, extend } from 'colord';
 import harmonies from 'colord/plugins/harmonies';
 import lchPlugin from 'colord/plugins/lch';
-import { watchFile } from 'fs';
+import fs, { watchFile } from 'fs';
+import sharp from 'sharp';
 
 extend([harmonies, lchPlugin]);
 
@@ -322,4 +323,24 @@ export async function processImage(pool, filename, category, user)
   const colors = convertObjToHex(hslColors);
 
   return { imageSrc: filename, colors };
+}
+
+export async function resizeAndProcessImg(pool, filename, filePath, category, user, maxSize)
+{ console.log(filePath);
+  await sharp(`${filePath}`)
+    .resize(maxSize, maxSize, {
+      fit: sharp.fit.inside,
+      withoutEnlargement: true,
+    })
+    .withMetadata()
+    .toBuffer((err, buffer) => { if (err) {
+      console.log('buffer', buffer); console.error('error with buffer');
+    }
+    console.log('buffer', buffer);
+
+    fs.writeFile(`${filePath}`, buffer, (e) => { if (e)console.error(e); });
+    });
+
+  const imageObj = await processImage(pool, filename, category, user);
+  return imageObj;
 }
