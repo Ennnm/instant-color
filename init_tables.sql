@@ -16,7 +16,7 @@ CREATE TABLE IF NOT EXISTS users(
 
 CREATE TABLE IF NOT EXISTS images(
   id SERIAL PRIMARY KEY,
-  users_id INTEGER REFERENCES users(id), 
+  users_id INTEGER REFERENCES users(id) ON DELETE CASCADE, 
   path TEXT, 
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 ) ;
@@ -28,8 +28,8 @@ CREATE TABLE IF NOT EXISTS categories (
 
 CREATE TABLE IF NOT EXISTS image_categories(
   id SERIAL PRIMARY KEY, 
-  image_id INTEGER REFERENCES images(id),
-  category_id INTEGER REFERENCES categories(id)
+  image_id INTEGER REFERENCES images(id) ON DELETE CASCADE,
+  category_id INTEGER REFERENCES categories(id) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS harmonies(
@@ -47,17 +47,17 @@ CREATE TABLE IF NOT EXISTS color_templates(
 );
 
 CREATE TABLE IF NOT EXISTS base_colors(
-  image_id INTEGER REFERENCES images(id),
-  closest_harmony INTEGER REFERENCES harmonies(id),
-  template_id INTEGER REFERENCES color_templates(id),
+  image_id INTEGER REFERENCES images(id) ON DELETE CASCADE,
+  closest_harmony INTEGER REFERENCES harmonies(id) ON DELETE CASCADE,
+  template_id INTEGER REFERENCES color_templates(id) ON DELETE CASCADE,
   main_hue SMALLINT CONSTRAINT within_hue_range CHECK (main_hue >= 0 AND main_hue <= 360) 
 );
 
 CREATE TABLE IF NOT EXISTS harmony_colors(
   id SERIAL PRIMARY KEY, 
-  image_id INTEGER REFERENCES images(id),
-  harmony_id SMALLINT REFERENCES harmonies(id),
-  template_id INTEGER REFERENCES color_templates(id),
+  image_id INTEGER REFERENCES images(id) ON DELETE CASCADE,
+  harmony_id SMALLINT REFERENCES harmonies(id) ON DELETE CASCADE,
+  template_id INTEGER REFERENCES color_templates(id) ON DELETE CASCADE,
   -- difference from base_colors
   base_diff SMALLINT
 );

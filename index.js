@@ -277,6 +277,23 @@ const indexHandler = async (req, res) => {
   res.render('index', { posts });
 };
 
+const deletePic = (req, res) => {
+  const { id } = req.params;
+  console.log(id);
+  const whenDeleted = (err, result) => {
+    if (err)
+    {
+      console.log('Error when deleting', err.stack);
+      res.status(503).send(result);
+      return;
+    }
+    res.redirect('/');
+  };
+
+  const sqlQuery = `DELETE FROM images WHERE id = ${id}`;
+  pool.query(sqlQuery, whenDeleted);
+};
+
 app.get('/', indexHandler);
 app.get('/uploadjpg', jpgHandler);
 app.post('/uploadjpg', mutlerUpload.single('photo'), acceptJpg);
@@ -292,6 +309,6 @@ app.delete('/logout', logUserOut);
 
 app.get('/picture/:id', renderPic);
 // app.get('/picture/:id/expand', renderExpandedPic);
-// app.get('/picture/:id/delete', deletePic);
+app.delete('/picture/:id/delete', deletePic);
 
 // app.post('/user/:id', userPosts);
