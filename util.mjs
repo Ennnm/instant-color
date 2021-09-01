@@ -5,6 +5,9 @@ import { request } from 'express';
 
 const { SALT } = process.env;
 
+export const handleError = (err) => {
+  console.error(err);
+};
 export const getHash = (input) => {
   const shaObj = new jssha('SHA-512', 'TEXT', { encoding: 'UTF8' });
   const unhasedString = `${input}-${SALT}`;

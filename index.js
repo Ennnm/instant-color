@@ -9,7 +9,7 @@ import multer from 'multer';
 
 import { imgFilePath, resizeAndProcessImg } from './color.mjs';
 import { downloadImg } from './color-mani.mjs';
-import { getHash, checkAuth } from './util.mjs';
+import { getHash, checkAuth, handleError } from './util.mjs';
 
 dotenv.config({ silent: process.env.NODE_ENV === 'production' });
 
@@ -80,7 +80,7 @@ const acceptJpg = async (req, res) => {
   });
   const filePath = imgFilePath(filename);
   console.log('category', category);
-  const imageObj = await resizeAndProcessImg(pool, filename, filePath, category, user, 500);
+  const imageObj = await resizeAndProcessImg(pool, filename, filePath, category, user, 500).catch(handleError);
   console.log('imageObj', imageObj);
   res.render('colorTemplates', imageObj);
   // render next page with image and analyze templates
@@ -254,26 +254,21 @@ const getColorsFromImgId = async (pool, id, getHarmonyCols) => {
 
 const renderPic = async (req, res) => {
   const { id } = req.params;
-  const postObj = await getColorsFromImgId(pool, id, true);
+  const postObj = await getColorsFromImgId(pool, id, true).catch(handleError);
   res.render('post', postObj);
 };
 
 const indexHandler = async (req, res) => {
   const limitNum = 10;
   const selectQuery = 'SELECT id FROM images ORDER BY id DESC LIMIT $1';
-  const { rows } = await pool.query(selectQuery, [limitNum]);
+  const { rows } = await pool.query(selectQuery, [limitNum]).catch(handleError);
   const ids = rows.map((obj) => obj.id);
-  // console.log('ids', ids);
   const poolPromises = [];
   ids.forEach((id) => {
     poolPromises.push(getColorsFromImgId(pool, id, false));
   });
 
-  const posts = await Promise.all(poolPromises);
-  // console.log('posts', posts);
-  // copy all index from birdwatching
-  // render contents in each card
-  // each card needs an expand button
+  const posts = await Promise.all(poolPromises).catch(handleError);
   res.render('index', { posts });
 };
 

@@ -1,4 +1,24 @@
 <!-- <div class='container col-12 col-md-8 col-lg-6 col-xl-4 -bg-light border mt-4  justify-content-center '> -->
+  <script>
+    function CopyToClipboard(id)
+    {
+    var r = document.createRange();
+    r.selectNode(document.getElementById(id));
+    window.getSelection().removeAllRanges();
+    window.getSelection().addRange(r);
+    document.execCommand('copy');
+    window.getSelection().removeAllRanges();
+    }
+
+    $(document).ready(function(){
+  $('[data-toggle="tooltip"]').tooltip();
+  $("#bottomtip").tooltip({
+ 
+placement:"bottom"
+ 
+});
+});
+</script>
   <div class="col p-3">
     <div class="row d-flex justify-content-between">
       <span>Hue: <%=hue%>/360</span>
@@ -13,8 +33,10 @@
   </div class="mt-1">
     <% harmonies.forEach((h, index)=>{ %>
       <div class="row swatches mt-1">
-        <% colTemplates[index].forEach((color)=>{ %>
-          <div class="swatch" style="background-color: <%=color%>;"></div>
+        <% colTemplates[index].forEach((color, index2)=>{ %>
+          <div class="swatch" style="background-color: <%=color%>">
+            <span class="swatch-text " id=<%=`${id}${index}${index2}`%> onclick="CopyToClipboard('<%=`${id}${index}${index2}`%>');return false;" data-toggle="tooltip" data-placement="bottom" title="copy#"><%=color%></span>
+          </div>
         <% }) %> 
       </div>
         <div class="row d-flex justify-content-between">

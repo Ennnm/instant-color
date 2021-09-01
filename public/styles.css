@@ -1,6 +1,40 @@
 .swatch {
-  display: inline-block;
+  /* display: inline-block; */
   border-radius: 50%;
   width: 3rem;
   height: 3rem;
+  text-align: center;
+  color: transparent;
+}
+
+.swatch-text {
+  color: transparent;
+  font-size: 0.7em;
+
+  display: inline-block;
+  /* float:left;  remove */
+  margin: 1rem 1rem 1rem 0.1rem;
+  cursor: pointer;
+}
+
+.swatch-text:hover {
+  color: transparent;
+
+  /* color: #7fff00; */
+}
+
+.swatch-text:target {
+  color: black;
+}
+
+.tooltip.bottom,
+.tooltip-inner {
+  font-size: 0.7rem;
+  background-color: dimgray;
+  color: gold;
+}
+
+.bs-tooltip-auto[x-placement^="bottom"] .arrow::before,
+.bs-tooltip-bottom .arrow::before {
+  border-bottom-color: dimgray; /* Red */
 }

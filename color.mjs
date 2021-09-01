@@ -8,6 +8,7 @@ import harmonies from 'colord/plugins/harmonies';
 import lchPlugin from 'colord/plugins/lch';
 import fs, { watchFile } from 'fs';
 import sharp from 'sharp';
+import { handleError } from './util.mjs';
 
 extend([harmonies, lchPlugin]);
 
@@ -23,28 +24,28 @@ export async function insertImage(pool, filename, category = '', username = '')
   if (username)
   {
     const { rows } = await pool.query('SELECT id FROM users WHERE username = $1',
-      [username]);
+      [username]).catch(handleError);
     userId = rows[0].id;
   }
   const { rows } = await pool.query('INSERT INTO images (users_id, path) VALUES ($1, $2) RETURNING id',
-    [userId, filename]);
+    [userId, filename]).catch(handleError);
   const imageId = rows[0].id;
   // find if category exist, if not insert new category, return index
   let categoryId;
   if (category)
   {
     const { rows } = await pool.query('SELECT id FROM categories WHERE category=$1',
-      [category]);
+      [category]).catch(handleError);
 
     if (rows.length > 0) categoryId = rows[0].id;
     else {
       const { rows } = await pool.query('INSERT INTO categories (category) VALUES ($1) RETURNING id',
-        [category]);
+        [category]).catch(handleError);
       categoryId = rows[0].id;
     }
     // insert into image_category
     await pool.query('INSERT INTO image_categories (image_id, category_id) VALUES ($1, $2)',
-      [imageId, categoryId]);
+      [imageId, categoryId]).catch(handleError);
   }
   return imageId;
 }
@@ -193,7 +194,7 @@ const calHarmonyDiff = (refHsl) => {
 };
 export async function getColorTemplates(pool, imageId, filepath, num)
 {
-  const colors = await ColorThief.getPalette(filepath, num * 2);
+  const colors = await ColorThief.getPalette(filepath, num * 2).catch(handleError);
   let hslColors = colors.map((c) => colord(`rgb(${c.join()})`).toHsl());
   hslColors = hslColors.filter((c) => c.l > 30 && c.l < 90).slice(0, num);
   hslColors = sortHues(hslColors);
@@ -245,7 +246,7 @@ async function insertColorTemplate(pool, hexCols)
 {
   const sqlQuery = 'INSERT INTO color_templates (hex_color1, hex_color2, hex_color3, hex_color4, hex_color5) VALUES ($1, $2, $3, $4, $5) RETURNING id';
 
-  const { rows } = await pool.query(sqlQuery, hexCols);
+  const { rows } = await pool.query(sqlQuery, hexCols).catch(handleError);
   return rows[0].id;
 }
 
@@ -266,7 +267,7 @@ const convertHarmonyName = (objHarmony) => {
 };
 async function insertBaseColor(pool, imageId, closestHarmony, baseColorsHex, mainHue)
 {
-  const colTempId = await insertColorTemplate(pool, baseColorsHex);
+  const colTempId = await insertColorTemplate(pool, baseColorsHex).catch(handleError);
 
   const harmonyInTable = convertHarmonyName(closestHarmony);
   pool
@@ -282,7 +283,7 @@ async function insertBaseColor(pool, imageId, closestHarmony, baseColorsHex, mai
 }
 async function insertHarmonyColor(pool, imageId, harmony, harmonyColors, diffFromBase)
 {
-  const colorTempId = await insertColorTemplate(pool, harmonyColors);
+  const colorTempId = await insertColorTemplate(pool, harmonyColors).catch(handleError);
 
   const harmonyInTable = convertHarmonyName(harmony);
   pool
@@ -300,11 +301,9 @@ async function insertHarmonyColor(pool, imageId, harmony, harmonyColors, diffFro
 export async function processImage(pool, filename, category, user)
 {
   const filePath = imgFilePath(filename);
-  let imageId = insertImage(pool, filename, category, user);
-  let hslColors = getColorTemplates(pool, imageId, filePath, 5);
+  const imageId = await insertImage(pool, filename, category, user).catch(handleError);
+  const hslColors = await getColorTemplates(pool, imageId, filePath, 5).catch(handleError);
 
-  const values = await Promise.all([imageId, hslColors]);
-  [imageId, hslColors] = values;
   const baseColors = hslColors.base;
 
   const harmonicDiffs = calHarmonyDiff(baseColors);
@@ -313,15 +312,14 @@ export async function processImage(pool, filename, category, user)
 
   const closestColors = hslColors[closestHarmony.harmony];
   const furthestColors = hslColors[furthestHarmony.harmony];
-  await insertBaseColor(pool, imageId, closestHarmony.harmony, covertHslToHex(baseColors), baseColors[0].h);
+  await insertBaseColor(pool, imageId, closestHarmony.harmony, covertHslToHex(baseColors), baseColors[0].h).catch(handleError);
   const insertClosestCol = insertHarmonyColor(pool, imageId, closestHarmony.harmony, covertHslToHex(closestColors), closestHarmony.value);
   const insertFurthestCol = insertHarmonyColor(pool, imageId, furthestHarmony.harmony, covertHslToHex(furthestColors), furthestHarmony.value);
 
-  await Promise.all([insertClosestCol, insertFurthestCol]);
+  await Promise.all([insertClosestCol, insertFurthestCol]).catch(handleError);
 
   console.log(harmonicDiffs);
   const colors = convertObjToHex(hslColors);
-
   return { imageSrc: filename, colors };
 }
 
@@ -341,6 +339,6 @@ export async function resizeAndProcessImg(pool, filename, filePath, category, us
     fs.writeFile(`${filePath}`, buffer, (e) => { if (e)console.error(e); });
     });
 
-  const imageObj = await processImage(pool, filename, category, user);
+  const imageObj = await processImage(pool, filename, category, user).catch(handleError);
   return imageObj;
 }
