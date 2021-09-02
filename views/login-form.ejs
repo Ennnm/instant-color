@@ -1,11 +1,54 @@
-  <div class="form-row ">
-    <div class="col-md-4  input-group mt-3 mb-3">
-      <span class="input-group-text" >Username:</span>
-      <input type="text" class ="form-control" id="username" name="username" autofocus value="<%= username%>"  />
-    </div>
-    <div class="col-md-4  input-group mt-3 mb-3">
-      <span class="input-group-text" >Password:</span>
-      <input type="password" class ="password" id="password" name="password"/>
-      </div>
-    </div>
-    <input class="btn btn-outline-secondary" style="margin-top: 1.6e margin-bottom: 1.6em" type="submit" value="Submit">
+<!-- <div class="form-row">
+  <div class="col-md-4 input-group mt-3 mb-3">
+    <span class="input-group-text">Username:</span>
+    <input
+      type="text"
+      class="form-control"
+      id="username"
+      name="username"
+      autofocus
+      value="<%= username%>"
+    />
+  </div>
+  <div class="col-md-4 input-group mt-3 mb-3">
+    <span class="input-group-text">Password:</span>
+    <input type="password" class="password" id="password" name="password" />
+  </div>
+</div>
+<input
+  class="btn btn-outline-secondary"
+  style="margin-top: 1.6e margin-bottom: 1.6em"
+  type="submit"
+  value="Submit"
+/> -->
+
+<img
+  class="mb-4 text-center"
+  src="Rainbow-Gif-Colorful.gif"
+  alt=""
+  width="72"
+  height="57"
+/>
+<h1 class="h3 mb-3 fw-normal">Please <%=title%></h1>
+
+<div class="form-floating">
+  <input type="text" class="form-control " id="floatingInput" name="username"
+  placeholder="<%=username?username: "Username"%>" />
+  <label for="floatingInput">Username</label>
+</div>
+<div class="form-floating">
+  <input
+    type="password"
+    class="form-control"
+    id="floatingPassword"
+    name="password"
+    placeholder="Password"
+  />
+  <label for="floatingPassword">Password</label>
+</div>
+
+<div class="checkbox mb-3">
+  <label> <input type="checkbox" value="remember-me" /> Remember me </label>
+</div>
+<button class="w-100 btn btn-lg btn-primary" type="submit">Sign in</button>
+<p class="mt-5 mb-3 text-muted">&copy; 2017–2021</p>

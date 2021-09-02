@@ -24,6 +24,7 @@ app.use(cookieParser());
 app.use(express.urlencoded({ extended: false }));
 app.use(express.static('public'));
 app.use(express.static('uploads'));
+app.use(express.static('resource'));
 // app.use((request, response, next) => {
 //   console.log('Every request:', request.path);
 //   next();
@@ -112,7 +113,7 @@ const accepturl = async (req, res) => {
 
 const signUpForm = (req, res) => {
   const obj = {
-    title: 'Sign up',
+    title: 'Sign Up',
     action: '/signup',
   };
   res.render('login', obj);
@@ -120,7 +121,7 @@ const signUpForm = (req, res) => {
 
 const acceptSignUp = (req, res) => {
   const obj = {
-    title: 'Sign up',
+    title: 'Sign Up',
     action: '/signup',
   };
 
@@ -157,7 +158,7 @@ const acceptSignUp = (req, res) => {
 };
 const loginForm = (req, res) => {
   const obj = {
-    title: 'login',
+    title: 'Login',
     action: '/login',
   };
   res.render('login', obj);
@@ -165,7 +166,7 @@ const loginForm = (req, res) => {
 
 const acceptLogin = (req, res) => {
   const obj = {
-    title: 'login',
+    title: 'Log in',
     action: '/login',
   };
   const whenLogIn = (err, result) => {
@@ -297,7 +298,24 @@ const deletePic = (req, res) => {
   pool.query(sqlQuery, whenDeleted);
 };
 
-app.get('/', indexHandler);
+const userPosts = async (req, res) => {
+  const { id } = req.params;
+  const { sort } = req.query;
+  const limitNum = 10;
+  console.log('id', id);
+  console.log(sort);
+  const selectQuery = 'SELECT id FROM images WHERE images.users_id = $1 ORDER BY id DESC LIMIT $2';
+  const { rows } = await pool.query(selectQuery, [id, limitNum]).catch(handleError);
+  const ids = rows.map((obj) => obj.id);
+  const poolPromises = [];
+  ids.forEach((index) => {
+    poolPromises.push(getColorsFromImgId(pool, index, false));
+  });
+
+  const posts = await Promise.all(poolPromises).catch(handleError);
+  res.render('index', { posts });
+};
+app.get('/?', indexHandler);
 app.get('/uploadjpg', jpgHandler);
 app.post('/uploadjpg', mutlerUpload.single('photo'), acceptJpg);
 // not working
@@ -314,4 +332,5 @@ app.get('/picture/:id', renderPic);
 // app.get('/picture/:id/expand', renderExpandedPic);
 app.delete('/picture/:id/delete', deletePic);
 
-// app.post('/user/:id', userPosts);
+app.get('/user/:id?', userPosts);
+app.get('/users/?', usersPosts);

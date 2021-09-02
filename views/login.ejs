@@ -1,5 +1,5 @@
 <%- include('header', {title: title }); -%>
-  <body>
+  <body >
     <%- include('nav'); -%> 
       <% if(locals.err){ %>  
         <div class="alert alert-danger alert-dismissible fade show"> 
@@ -7,13 +7,13 @@
           <strong><%=locals.err%></strong> 
         </div>
       <%   } %> 
-    <div class='container col-10 bg-light border mt-4'>
-      <div class="">
-      <form action=<%=action %> method="POST" >
-        <%- include('login-form', {username:locals.username, password:locals.password}); -%>
-      </form>
-      </div>
+    <div class=' bg-light  mt-4'>
+      <main class="form-signin">
+        <form action=<%=action %> method="POST">
+            <%- include('login-form', {title: locals.title, username:locals.username, password:locals.password}); -%>    
+        </form>
+      </main>
   </body>
-</html>
+
 
 

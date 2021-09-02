@@ -35,3 +35,128 @@
 .bs-tooltip-bottom .arrow::before {
   border-bottom-color: dimgray; /* Red */
 }
+
+input[type="range"] {
+  outline: 0;
+  /* margin-top: 1rem;
+  margin-bottom: 1rem; */
+  /* display: inline-block; */
+  /* margin: 0 auto; */
+  -webkit-appearance: none;
+  width: 190px;
+  /* flex-shrink: 1; */
+  height: 8px;
+  background: linear-gradient(
+    to right,
+    hsl(0, 100%, 88%) 0%,
+    hsl(30, 100%, 88%) 8.3%,
+    hsl(60, 100%, 88%) 16.6%,
+    hsl(90, 100%, 88%) 25%,
+    hsl(120, 100%, 88%) 33.3%,
+    hsl(150, 100%, 88%) 41.6%,
+    hsl(180, 100%, 88%) 50%,
+    hsl(210, 100%, 88%) 58.3%,
+    hsl(240, 100%, 88%) 66.6%,
+    hsl(270, 100%, 88%) 75%,
+    hsl(300, 100%, 88%) 83.3%,
+    hsl(330, 100%, 88%) 91.6%,
+    hsl(360, 100%, 88%) 100%
+  );
+}
+
+.form-signin {
+  width: 100%;
+  max-width: 330px;
+  padding: 15px;
+  margin: auto;
+}
+
+.form-signin .checkbox {
+  font-weight: 400;
+}
+
+.form-signin .form-floating:focus-within {
+  z-index: 2;
+}
+
+.form-signin input[type="email"] {
+  margin-bottom: -1px;
+  border-bottom-right-radius: 0;
+  border-bottom-left-radius: 0;
+}
+
+.form-signin input[type="password"] {
+  margin-bottom: 10px;
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+}
+
+.card-body {
+  /* background-color: yellow; */
+}
+.rainbow-text {
+  /* font-size: 72px; */
+  background: -webkit-linear-gradient(
+    0deg,
+    /* hsl(0 80% 50%),
+    hsl(30.942 100% 37.268%),
+    hsl(45.617 100% 32.426%),
+    hsl(62.599 100% 28.853%),
+    hsl(90 50% 45%),
+    hsl(90 50% 45%), */
+      hsl(160.76 100% 32.755%),
+    hsl(179.62 100% 30.893%),
+    hsl(191.74 100% 36.32%),
+    hsl(210 80% 55%),
+    hsl(210 80% 55%),
+    hsl(255.77 69.1% 67.1%),
+    hsl(309.27 60.619% 54.117%)
+      /* ,
+    hsl(329.85 100% 44.736%)
+    ,
+    hsl(0 80% 50%) */
+  );
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.btn-outline-secondary {
+  color: #6c757d;
+  border-color: #6c757d;
+}
+.btn-outline-secondary:hover {
+  /* background-color: #04aa6d; */
+  color: #6c757d;
+  background: linear-gradient(
+    to right,
+    hsl(0, 100%, 88%) 0%,
+    hsl(210, 100%, 88%) 58.3%
+  );
+  /* background-image: -webkit-linear-gradient(
+    0deg,
+    hsl(0 80% 50%),
+    hsl(30.942 100% 37.268%),
+    hsl(45.617 100% 32.426%),
+    hsl(62.599 100% 28.853%),
+    hsl(90 50% 45%),
+    hsl(90 50% 45%),
+    hsl(160.76 100% 32.755%),
+    hsl(179.62 100% 30.893%),
+    hsl(191.74 100% 36.32%),
+    hsl(210 80% 55%),
+    hsl(210 80% 55%),
+    hsl(255.77 69.1% 67.1%),
+    hsl(309.27 60.619% 54.117%),
+    hsl(329.85 100% 44.736%),
+    hsl(0 80% 50%)
+  ); */
+  /* -webkit-background-clip: text; */
+  /* -webkit-text-fill-color: transparent; */
+}
+/* .btn-outline-secondary {
+  border-color: #04aa6d;
+  color: green;
+}
+.btn-outline-secondary:hover {
+  background-color: #04aa6d;
+  color: white;
+} */
