@@ -1,0 +1,62 @@
+<%- include('header', {title: `Upload`}); -%>
+<body>
+  <%- include('nav', locals.numVisitors); -%>
+
+        <% if(locals.err){ %>  
+        <div class="alert alert-warning alert-dismissible fade show" role="alert">
+          <strong><%=locals.err%></strong> 
+
+
+        </div>
+      <%   } %> 
+  <main class="form-signin">
+    <form action="/upload" method="post" enctype="multipart/form-data">
+      <div class="text-center">
+        <img class="mb-4 text-center" src="upload-cat.gif" alt="" width="150" />
+      </div>
+      <h1 class="h3 mb-2 fw-normal">Please upload an image</h1>
+      <h3 class="h6 mb-3 fw-normal">Url or jpg file</h3>
+      <div class=" mb-3">
+        <input
+          type="text"
+          class="form-control"
+          id="imgUrl"
+          name="imgUrl"
+          placeholder="Image url"
+          oninput="disable_file()"
+        />
+      </div>
+
+        <div class="mb-3">
+          <input class="form-control" type="file" name="photo" id="photo" name="photo" accept="image/jpeg" oninput="disable_url()">
+        </div>
+      <div class="form-floating"></div>
+        <input
+          class="form-control"
+          list="datalistOptions"
+          id="category"
+          placeholder="Category"
+        />
+        <datalist id="category" name="category">
+          <option value="San Francisco"></option>
+        </datalist>
+      </div>
+      <button class="w-100 btn btn-lg btn-primary mt-4" type="submit">
+        Upload
+      </button>
+      <p class="mt-5 mb-3 text-muted">&copy; 2017–2021</p>
+    </form>
+  </main>
+
+
+
+  <script type="text/javascript">
+    function disable_file (){
+       $("#photo").prop('disabled', true);
+    }
+    function disable_url (){
+       $("#imgUrl").prop('disabled', true);
+
+    }
+  </script>
+</body>

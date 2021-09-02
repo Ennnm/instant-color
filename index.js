@@ -67,27 +67,51 @@ const mutlerUpload = multer({ dest: 'uploads/', storage });
 
 const jpgHandler = (req, res) => {
   console.log('in jpg handler');
-  res.render('uploadjpg');
+  res.render('upload');
 };
 
-const acceptJpg = async (req, res) => {
+const acceptUpload = async (req, res) => {
   const { user, loggedIn } = req.cookies;
-  const { category } = req.body;
-  const { filename, path } = req.file;
-  fs.access('./uploads', (error) => {
-    if (error)
-    {
-      fs.mkdirSync('./uploads');
-    }
-  });
-  const filePath = imgFilePath(filename);
-  console.log('category', category);
+  const { imgUrl, category } = req.body;
+  if (req.file)
+  {
+    const { filename, path } = req.file;
+    fs.access('./uploads', (error) => {
+      if (error)
+      {
+        fs.mkdirSync('./uploads');
+      }
+    });
+    const filePath = imgFilePath(filename);
+    resizeAndProcessImg(pool, filename, filePath, category, user, 500).then((imgObj) => {
+      res.render('colorTemplates', imgObj);
+    }).catch(handleError);
+  }
+  else if (imgUrl) {
+    const filename = `${Date.now()}.jpg`;
+    const filepath = imgFilePath(filename);
+    const maxSize = 500;
 
-  console.log('filepath', filePath);
-  console.log('filename', filename);
-  const imageObj = await resizeAndProcessImg(pool, filename, filePath, category, user, 500).catch(handleError);
-  console.log('imageObj', imageObj);
-  res.render('colorTemplates', imageObj);
+    downloadSmallImg(imgUrl, filepath, maxSize)
+      .then(() => processImage(pool, filename, category, user))
+      .then((imgObj) => {
+        console.log('imageobj', imgObj);
+        res.render('colorTemplates', imgObj);
+      })
+      .catch((e) => {
+        console.error(e);
+        res.render('upload.ejs', { err: 'Unable to get image from url' });
+      });
+
+    // await downloadSmallImg(imgUrl, filepath, maxSize);
+    // const imageObj = await processImage(pool, filename, category, user).catch((e) => {
+    //   console.error(e);
+    //   res.render('uploadurl.ejs');
+    // });
+    // console.log('imageobj', imageObj);
+    // res.render('colorTemplates', imageObj);
+  }
+
   // render next page with image and analyze templates
 };
 const urlHandler = (req, res) => {
@@ -264,7 +288,12 @@ const getColorsFromImgId = async (pool, id, getHarmonyCols) => {
 const renderPic = async (req, res) => {
   const { id } = req.params;
   const postObj = await getColorsFromImgId(pool, id, true).catch(handleError);
-  res.render('post', postObj);
+  const obj = {
+    ...postObj,
+
+  };
+
+  res.render('post', obj);
 };
 
 const indexHandler = async (req, res) => {
@@ -316,10 +345,10 @@ const userPosts = async (req, res) => {
   res.render('index', { posts });
 };
 app.get('/?', indexHandler);
-app.get('/uploadjpg', jpgHandler);
-app.post('/uploadjpg', mutlerUpload.single('photo'), acceptJpg);
+app.get('/upload', jpgHandler);
+app.post('/upload', mutlerUpload.single('photo'), acceptUpload);
 // not working
-app.get('/uploadurl', urlHandler);
+// app.get('/uploadurl', urlHandler);
 app.post('/uploadurl', accepturl);
 
 app.get('/signup', signUpForm);
@@ -333,4 +362,4 @@ app.get('/picture/:id', renderPic);
 app.delete('/picture/:id/delete', deletePic);
 
 app.get('/user/:id?', userPosts);
-app.get('/users/?', usersPosts);
+// app.get('/users/?', usersPosts);

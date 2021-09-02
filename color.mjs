@@ -391,6 +391,5 @@ export async function resizeAndProcessImg(pool, filename, filePath, category, us
     fs.writeFile(`${filePath}`, buffer, (e) => { if (e)console.error(e); });
     });
 
-  const imageObj = await processImage(pool, filename, category, user).catch(handleError);
-  return imageObj;
+  return processImage(pool, filename, category, user).catch(handleError);
 }

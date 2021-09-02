@@ -2,8 +2,7 @@
   <body >
     <%- include('nav'); -%> 
       <% if(locals.err){ %>  
-        <div class="alert alert-danger alert-dismissible fade show"> 
-          <button type="button" class="close" data-dismiss="alert">&times;</button>
+        <div class="alert alert-warning alert-dismissible fade show" role="alert">
           <strong><%=locals.err%></strong> 
         </div>
       <%   } %> 
