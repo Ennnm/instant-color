@@ -2,13 +2,14 @@ import express from 'express';
 import methodOverride from 'method-override';
 import cookieParser from 'cookie-parser';
 import moment from 'moment';
-import dotenv from 'dotenv';
+import dotenv, { config } from 'dotenv';
 import fs from 'fs';
 import pg from 'pg';
 import multer from 'multer';
+import sharp from 'sharp';
 
-import { imgFilePath, resizeAndProcessImg } from './color.mjs';
-import { downloadImg } from './color-mani.mjs';
+import { imgFilePath, resizeAndProcessImg, processImage } from './color.mjs';
+import { downloadImg, downloadSmallImg } from './color-mani.mjs';
 import { getHash, checkAuth, handleError } from './util.mjs';
 
 dotenv.config({ silent: process.env.NODE_ENV === 'production' });
@@ -80,6 +81,9 @@ const acceptJpg = async (req, res) => {
   });
   const filePath = imgFilePath(filename);
   console.log('category', category);
+
+  console.log('filepath', filePath);
+  console.log('filename', filename);
   const imageObj = await resizeAndProcessImg(pool, filename, filePath, category, user, 500).catch(handleError);
   console.log('imageObj', imageObj);
   res.render('colorTemplates', imageObj);
@@ -89,16 +93,20 @@ const urlHandler = (req, res) => {
   res.render('uploadurl');
 };
 // not working yet. issue with buffer in sharp
+
 const accepturl = async (req, res) => {
   const { user, loggedIn } = req.cookies;
   const { imgUrl, category } = req.body;
   const filename = `${Date.now()}.jpg`;
   const filepath = imgFilePath(filename);
+  const maxSize = 500;
 
-  await downloadImg(imgUrl, filepath);
-  console.log('download sucess!', Date.now());
-  const imageObj = await resizeAndProcessImg(pool, filename, filepath, category, user, 500);
-
+  await downloadSmallImg(imgUrl, filepath, maxSize);
+  const imageObj = await processImage(pool, filename, category, user).catch((e) => {
+    console.error(e);
+    res.render('uploadurl.ejs');
+  });
+  console.log('imageobj', imageObj);
   res.render('colorTemplates', imageObj);
 };
 

@@ -8,6 +8,7 @@ import harmonies from 'colord/plugins/harmonies';
 import lchPlugin from 'colord/plugins/lch';
 import fs, { watchFile } from 'fs';
 import sharp from 'sharp';
+import { resolve } from 'path';
 import { handleError } from './util.mjs';
 
 extend([harmonies, lchPlugin]);
@@ -21,34 +22,84 @@ export function imgFilePath(filename) { return `./uploads/${filename}`; }
 export async function insertImage(pool, filename, category = '', username = '')
 { // find user id from username
   let userId = 0;
+  let imageId;
   if (username)
   {
-    const { rows } = await pool.query('SELECT id FROM users WHERE username = $1',
-      [username]).catch(handleError);
-    userId = rows[0].id;
+    await pool.query('SELECT id FROM users WHERE username = $1',
+      [username])
+      .then((result) => {
+        console.log('in if username', result);
+        userId = result.rows[0].id;
+        return pool.query('INSERT INTO images (users_id, path) VALUES ($1, $2) RETURNING id',
+          [userId, filename]); })
+      .then((result) => {
+        imageId = result.rows[0].id;
+        return Promise.resolve();
+      }).catch(handleError);
   }
-  const { rows } = await pool.query('INSERT INTO images (users_id, path) VALUES ($1, $2) RETURNING id',
-    [userId, filename]).catch(handleError);
-  const imageId = rows[0].id;
-  // find if category exist, if not insert new category, return index
-  let categoryId;
+  else
+  {
+    await pool.query('INSERT INTO images (users_id, path) VALUES ($1, $2) RETURNING id',
+      [userId, filename])
+      .then((result) => {
+        imageId = result.rows[0].id;
+        return Promise.resolve();
+      }).catch(handleError);
+  }
+
   if (category)
   {
-    const { rows } = await pool.query('SELECT id FROM categories WHERE category=$1',
-      [category]).catch(handleError);
-
-    if (rows.length > 0) categoryId = rows[0].id;
-    else {
-      const { rows } = await pool.query('INSERT INTO categories (category) VALUES ($1) RETURNING id',
-        [category]).catch(handleError);
-      categoryId = rows[0].id;
-    }
-    // insert into image_category
-    await pool.query('INSERT INTO image_categories (image_id, category_id) VALUES ($1, $2)',
-      [imageId, categoryId]).catch(handleError);
+    let categoryId;
+    await pool.query('SELECT id FROM categories WHERE category=$1',
+      [category])
+      .then((result) => {
+        if (result.rows.length > 0) {
+          Promise.resolve(result);
+        }
+        else {
+          return pool.query('INSERT INTO categories (category) VALUES ($1) RETURNING id',
+            [category]);
+        }
+      })
+      .then((result) => {
+        categoryId = result.rows[0].id;
+        return pool.query('INSERT INTO image_categories (image_id, category_id) VALUES ($1, $2)',
+          [imageId, categoryId]);
+      }).catch(handleError);
   }
   return imageId;
 }
+// export async function insertImage(pool, filename, category = '', username = '')
+// { // find user id from username
+//   let userId = 0;
+//   if (username)
+//   {
+//     const { rows } = await pool.query('SELECT id FROM users WHERE username = $1',
+//       [username]).catch(handleError);
+//     userId = rows[0].id;
+//   }
+//   const { rows } = await pool.query('INSERT INTO images (users_id, path) VALUES ($1, $2) RETURNING id',
+//     [userId, filename]).catch(handleError);
+//   const imageId = rows[0].id;
+//   // find if category exist, if not insert new category, return index
+//   let categoryId;
+//   if (category)
+//   {
+//     const { rows } = await pool.query('SELECT id FROM categories WHERE category=$1',
+//       [category]).catch(handleError);
+
+//     if (rows.length > 0) categoryId = rows[0].id;
+//     else {
+//       const { rows } = await pool.query('INSERT INTO categories (category) VALUES ($1) RETURNING id',
+//         [category]).catch(handleError);
+//       categoryId = rows[0].id;
+//     }
+//     // insert into image_category
+//     await pool.query('INSERT INTO image_categories (image_id, category_id) VALUES ($1, $2)',
+//       [imageId, categoryId]).catch(handleError);
+//   }
+//   return imageId;
+// }
 
 const repeatArr = (arr, length) => {
   const newArr = [...arr];
@@ -297,6 +348,7 @@ async function insertHarmonyColor(pool, imageId, harmony, harmonyColors, diffFro
       console.error(error);
     });
 }
+// break process image into few parts
 
 export async function processImage(pool, filename, category, user)
 {
