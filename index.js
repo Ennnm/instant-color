@@ -10,12 +10,15 @@ import sharp from 'sharp';
 
 import { imgFilePath, resizeAndProcessImg, processImage } from './color.mjs';
 import { downloadImg, downloadSmallImg } from './color-mani.mjs';
-import { getHash, checkAuth, handleError } from './util.mjs';
+import {
+  getHash, restrictToLoggedIn, handleError,
+} from './util.mjs';
 
 dotenv.config({ silent: process.env.NODE_ENV === 'production' });
 
 const { Pool } = pg;
 const app = express();
+const PORT = process.argv[2] ? process.argv[2] : 3004;
 
 app.use(methodOverride('_method'));
 app.set('view engine', 'ejs');
@@ -25,11 +28,7 @@ app.use(express.urlencoded({ extended: false }));
 app.use(express.static('public'));
 app.use(express.static('uploads'));
 app.use(express.static('resource'));
-// app.use((request, response, next) => {
-//   console.log('Every request:', request.path);
-//   next();
-// });
-const PORT = process.argv[2] ? process.argv[2] : 3004;
+
 app.listen(PORT);
 
 let pgConnectionConfigs;
@@ -65,14 +64,46 @@ const storage = multer.diskStorage({
 
 const mutlerUpload = multer({ dest: 'uploads/', storage });
 
-const jpgHandler = (req, res) => {
+app.use((request, response, next) => {
+  request.isUserLoggedIn = false;
+
+  if (request.cookies.loggedIn && request.cookies.userId) {
+    const hash = getHash(request.cookies.userId);
+
+    if (request.cookies.loggedIn === hash) {
+      request.isUserLoggedIn = true;
+    }
+  }
+  next();
+});
+
+const imageUpload = async (req, res) => {
+  const { userId, loggedIn } = req.cookies;
   console.log('in jpg handler');
-  res.render('upload');
+  console.log('request.isUserLoggedIn', req.isUserLoggedIn);
+  if (req.isUserLoggedIn === true)
+  {
+    const { rows } = await pool.query(`SELECT category FROM categories INNER JOIN image_categories on categories.id = image_categories.category_id INNER JOIN images ON image_categories.image_id = images.id WHERE images.users_id=${userId}`);
+    // const sqlQuery = ;
+    const categories = rows.map((obj) => obj.category);
+    console.log('categories', categories);
+    res.render('upload', { categories });
+  }
+  else {
+    const obj = {
+      title: 'Login',
+      action: '/login',
+      err: 'Need to be logged-in to analyse pictures.',
+    };
+    res.render('login', obj);
+  }
 };
 
 const acceptUpload = async (req, res) => {
-  const { user, loggedIn } = req.cookies;
+  const { userId, loggedIn } = req.cookies;
   const { imgUrl, category } = req.body;
+  console.log('user', userId);
+  console.log('loggedIn', loggedIn);
   if (req.file)
   {
     const { filename, path } = req.file;
@@ -83,8 +114,8 @@ const acceptUpload = async (req, res) => {
       }
     });
     const filePath = imgFilePath(filename);
-    resizeAndProcessImg(pool, filename, filePath, category, user, 500).then((imgObj) => {
-      res.render('colorTemplates', imgObj);
+    resizeAndProcessImg(pool, filename, filePath, category, userId, 500).then((imageId) => {
+      res.redirect(`/picture/${imageId}`);
     }).catch(handleError);
   }
   else if (imgUrl) {
@@ -92,47 +123,21 @@ const acceptUpload = async (req, res) => {
     const filepath = imgFilePath(filename);
     const maxSize = 500;
 
-    downloadSmallImg(imgUrl, filepath, maxSize)
-      .then(() => processImage(pool, filename, category, user))
-      .then((imgObj) => {
-        console.log('imageobj', imgObj);
-        res.render('colorTemplates', imgObj);
+    await downloadSmallImg(imgUrl, filepath, maxSize)
+      .then(() => processImage(pool, filename, category, userId))
+      .then((imageId) => {
+        console.log('imageId', imageId);
+        res.redirect(`/picture/${imageId}`);
       })
       .catch((e) => {
         console.error(e);
         res.render('upload.ejs', { err: 'Unable to get image from url' });
       });
-
-    // await downloadSmallImg(imgUrl, filepath, maxSize);
-    // const imageObj = await processImage(pool, filename, category, user).catch((e) => {
-    //   console.error(e);
-    //   res.render('uploadurl.ejs');
-    // });
-    // console.log('imageobj', imageObj);
-    // res.render('colorTemplates', imageObj);
   }
-
+  else {
+    res.render('upload.ejs', { err: 'No image uploaded' });
+  }
   // render next page with image and analyze templates
-};
-const urlHandler = (req, res) => {
-  res.render('uploadurl');
-};
-// not working yet. issue with buffer in sharp
-
-const accepturl = async (req, res) => {
-  const { user, loggedIn } = req.cookies;
-  const { imgUrl, category } = req.body;
-  const filename = `${Date.now()}.jpg`;
-  const filepath = imgFilePath(filename);
-  const maxSize = 500;
-
-  await downloadSmallImg(imgUrl, filepath, maxSize);
-  const imageObj = await processImage(pool, filename, category, user).catch((e) => {
-    console.error(e);
-    res.render('uploadurl.ejs');
-  });
-  console.log('imageobj', imageObj);
-  res.render('colorTemplates', imageObj);
 };
 
 const signUpForm = (req, res) => {
@@ -264,7 +269,6 @@ const getColorsFromImgId = async (pool, id, getHarmonyCols) => {
       if (getHarmonyCols)
       {
         postObj.harmonicDiff = [postObj.harmonicDiff[0], ...postObj.harmonicDiff];
-        // console.log(postObj.harmonies);
         harmonyColProp.forEach((h) => {
           colTempQueries.push(pool.query('SELECT * FROM color_templates WHERE id = $1', [h.template_id]));
         });
@@ -281,38 +285,95 @@ const getColorsFromImgId = async (pool, id, getHarmonyCols) => {
       postObj.colTemplates = hexCol;
     })
     .catch((e) => console.error(e));
-  // console.log('postObj', postObj);
+
   return postObj;
 };
 
 const renderPic = async (req, res) => {
   const { id } = req.params;
   const postObj = await getColorsFromImgId(pool, id, true).catch(handleError);
-  const obj = {
-    ...postObj,
 
-  };
+  res.render('post', postObj);
+};
+const getIdsAfterSortOrFilter = async (limitNum, sort = '', order = '', filter = '', userId = '') =>
+{
+  let ids;
+  let userCondition = '';
+  if (userId !== '')
+  {
+    userCondition = `WHERE images.users_id=${userId}`;
+  }
 
-  res.render('post', obj);
+  if (sort === 'hue' && order === 'DESC')
+  {
+    const hueSort = `SELECT images.id from images INNER JOIN base_colors ON images.id =base_colors.image_id  ${userCondition} ORDER BY base_colors.main_hue DESC  LIMIT $1`;
+
+    const { rows } = await pool.query(hueSort, [limitNum]).catch(handleError);
+    ids = rows.map((obj) => obj.id);
+  }
+  else if (sort === 'hue' && order === 'ASC')
+  {
+    const hueSort = `SELECT images.id from images INNER JOIN base_colors ON images.id =base_colors.image_id ${userCondition} ORDER BY base_colors.main_hue ASC  LIMIT $1`;
+    const { rows } = await pool.query(hueSort, [limitNum]).catch(handleError);
+    ids = rows.map((obj) => obj.id);
+  }
+  else if (sort === 'dateCreated' && order === 'DESC')
+  {
+    const dateSort = `SELECT id FROM images ${userCondition} ORDER BY created_at DESC LIMIT $1`;
+    const { rows } = await pool.query(dateSort, [limitNum]).catch(handleError);
+    ids = rows.map((obj) => obj.id);
+  }
+  else if (sort === 'dateCreated' && order === 'ASC')
+  {
+    const dateSort = `SELECT id FROM images ${userCondition} ORDER BY created_at ASC LIMIT $1`;
+    const { rows } = await pool.query(dateSort, [limitNum]).catch(handleError);
+    ids = rows.map((obj) => obj.id);
+  }
+  else if (filter !== '') {
+    let typeQuery = 'SELECT images.id, harmony_colors.base_diff FROM images INNER JOIN base_colors ON images.id = base_colors.image_id INNER JOIN harmonies ON base_colors.closest_harmony = harmonies.id INNER JOIN harmony_colors ON images.id = harmony_colors.image_id AND base_colors.closest_harmony = harmony_colors.harmony_id WHERE harmonies.type=$1 ORDER BY harmony_colors.base_diff ASC LIMIT $2';
+
+    if (userId !== '')
+    {
+      typeQuery = `SELECT images.id, harmony_colors.base_diff FROM images INNER JOIN base_colors ON images.id = base_colors.image_id INNER JOIN harmonies ON base_colors.closest_harmony = harmonies.id INNER JOIN harmony_colors ON images.id = harmony_colors.image_id AND base_colors.closest_harmony = harmony_colors.harmony_id WHERE harmonies.type=$1 AND ${userCondition} ORDER BY harmony_colors.base_diff ASC LIMIT $2`;
+    }
+    const { rows } = await pool.query(typeQuery, [filter, limitNum]).catch(handleError);
+    ids = rows.map((obj) => obj.id);
+  }
+  else {
+    const selectQuery = `SELECT id FROM images ${userCondition} ORDER BY id DESC LIMIT $1`;
+    const { rows } = await pool.query(selectQuery, [limitNum]).catch(handleError);
+    ids = rows.map((obj) => obj.id);
+  }
+  return ids;
 };
 
 const indexHandler = async (req, res) => {
-  const limitNum = 10;
-  const selectQuery = 'SELECT id FROM images ORDER BY id DESC LIMIT $1';
-  const { rows } = await pool.query(selectQuery, [limitNum]).catch(handleError);
-  const ids = rows.map((obj) => obj.id);
+  const limitNum = 100;
+  const { sort, filter, order } = req.query;
+
+  console.log('sort', sort);
+  console.log('order', order);
+
+  const ids = await getIdsAfterSortOrFilter(limitNum, sort, order, filter);
+
   const poolPromises = [];
   ids.forEach((id) => {
     poolPromises.push(getColorsFromImgId(pool, id, false));
   });
 
   const posts = await Promise.all(poolPromises).catch(handleError);
-  res.render('index', { posts });
+  res.render('index', { posts, enableDelete: false, url: '' });
+};
+
+const indexColorHandler = (req, res) => {
+  const { colorPicker } = req.body;
+  console.log('color picker:', colorPicker);
+  // get all posts that are in range of the color
+  // res.render('index', { posts, enableDelete: false });
 };
 
 const deletePic = (req, res) => {
   const { id } = req.params;
-  console.log(id);
   const whenDeleted = (err, result) => {
     if (err)
     {
@@ -320,36 +381,43 @@ const deletePic = (req, res) => {
       res.status(503).send(result);
       return;
     }
-    res.redirect('/');
+    res.redirect(`/user/${id}`);
   };
 
   const sqlQuery = `DELETE FROM images WHERE id = ${id}`;
   pool.query(sqlQuery, whenDeleted);
 };
-
+const home = (req, res) => {
+  const { userId } = req.cookies;
+  if (req.isUserLoggedIn === false) {
+    req.status(403).send('sorry');
+  }
+  else {
+    res.redirect(`/user/${userId}`);
+  }
+};
 const userPosts = async (req, res) => {
   const { id } = req.params;
-  const { sort } = req.query;
-  const limitNum = 10;
-  console.log('id', id);
-  console.log(sort);
-  const selectQuery = 'SELECT id FROM images WHERE images.users_id = $1 ORDER BY id DESC LIMIT $2';
-  const { rows } = await pool.query(selectQuery, [id, limitNum]).catch(handleError);
-  const ids = rows.map((obj) => obj.id);
+  const { sort, filter, order } = req.query;
+  const limitNum = 100;
+
+  console.log('sort', sort);
+  const ids = await getIdsAfterSortOrFilter(limitNum, sort, order, filter, id);
+
   const poolPromises = [];
   ids.forEach((index) => {
     poolPromises.push(getColorsFromImgId(pool, index, false));
   });
 
   const posts = await Promise.all(poolPromises).catch(handleError);
-  res.render('index', { posts });
+  res.render('index', { posts, enableDelete: true, url: `user/${id}` });
 };
+
+const userFav = () => {};
 app.get('/?', indexHandler);
-app.get('/upload', jpgHandler);
+app.post('/?', indexColorHandler);
+app.get('/upload', imageUpload);
 app.post('/upload', mutlerUpload.single('photo'), acceptUpload);
-// not working
-// app.get('/uploadurl', urlHandler);
-app.post('/uploadurl', accepturl);
 
 app.get('/signup', signUpForm);
 app.post('/signup', acceptSignUp);
@@ -361,5 +429,7 @@ app.get('/picture/:id', renderPic);
 // app.get('/picture/:id/expand', renderExpandedPic);
 app.delete('/picture/:id/delete', deletePic);
 
+app.get('/home', restrictToLoggedIn(pool), home);
 app.get('/user/:id?', userPosts);
+app.get('/fav/', restrictToLoggedIn(pool), userFav);
 // app.get('/users/?', usersPosts);

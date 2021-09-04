@@ -19,34 +19,18 @@ export const rgbToHex = (r, g, b) => `${[r, g, b].map((x) => {
 }).join('')}`;
 
 export function imgFilePath(filename) { return `./uploads/${filename}`; }
-export async function insertImage(pool, filename, category = '', username = '')
-{ // find user id from username
-  let userId = 0;
+export async function insertImage(pool, filename, category = '', userId = 0)
+{
   let imageId;
-  if (username)
-  {
-    await pool.query('SELECT id FROM users WHERE username = $1',
-      [username])
-      .then((result) => {
-        console.log('in if username', result);
-        userId = result.rows[0].id;
-        return pool.query('INSERT INTO images (users_id, path) VALUES ($1, $2) RETURNING id',
-          [userId, filename]); })
-      .then((result) => {
-        imageId = result.rows[0].id;
-        return Promise.resolve();
-      }).catch(handleError);
-  }
-  else
-  {
-    await pool.query('INSERT INTO images (users_id, path) VALUES ($1, $2) RETURNING id',
-      [userId, filename])
-      .then((result) => {
-        imageId = result.rows[0].id;
-        return Promise.resolve();
-      }).catch(handleError);
-  }
-
+  await pool.query(
+    'INSERT INTO images (users_id, path) VALUES ($1, $2) RETURNING id',
+    [userId, filename],
+  )
+    .then((result) => {
+      imageId = result.rows[0].id;
+      return imageId;
+    }).catch(handleError);
+  console.log('category', category);
   if (category)
   {
     let categoryId;
@@ -54,12 +38,11 @@ export async function insertImage(pool, filename, category = '', username = '')
       [category])
       .then((result) => {
         if (result.rows.length > 0) {
-          Promise.resolve(result);
+          return result;
         }
-        else {
-          return pool.query('INSERT INTO categories (category) VALUES ($1) RETURNING id',
-            [category]);
-        }
+
+        return pool.query('INSERT INTO categories (category) VALUES ($1) RETURNING id',
+          [category]);
       })
       .then((result) => {
         categoryId = result.rows[0].id;
@@ -69,37 +52,6 @@ export async function insertImage(pool, filename, category = '', username = '')
   }
   return imageId;
 }
-// export async function insertImage(pool, filename, category = '', username = '')
-// { // find user id from username
-//   let userId = 0;
-//   if (username)
-//   {
-//     const { rows } = await pool.query('SELECT id FROM users WHERE username = $1',
-//       [username]).catch(handleError);
-//     userId = rows[0].id;
-//   }
-//   const { rows } = await pool.query('INSERT INTO images (users_id, path) VALUES ($1, $2) RETURNING id',
-//     [userId, filename]).catch(handleError);
-//   const imageId = rows[0].id;
-//   // find if category exist, if not insert new category, return index
-//   let categoryId;
-//   if (category)
-//   {
-//     const { rows } = await pool.query('SELECT id FROM categories WHERE category=$1',
-//       [category]).catch(handleError);
-
-//     if (rows.length > 0) categoryId = rows[0].id;
-//     else {
-//       const { rows } = await pool.query('INSERT INTO categories (category) VALUES ($1) RETURNING id',
-//         [category]).catch(handleError);
-//       categoryId = rows[0].id;
-//     }
-//     // insert into image_category
-//     await pool.query('INSERT INTO image_categories (image_id, category_id) VALUES ($1, $2)',
-//       [imageId, categoryId]).catch(handleError);
-//   }
-//   return imageId;
-// }
 
 const repeatArr = (arr, length) => {
   const newArr = [...arr];
@@ -113,8 +65,6 @@ const repeatArr = (arr, length) => {
     const arrColor = arr[index];
     const color = {
       h: arrColor.h,
-      // s: arrColor.s + 5 * i,
-      // l: arrColor.l - 5 * i,
       s: arrColor.s,
       l: arrColor.l,
     };
@@ -204,16 +154,12 @@ const calcDiffFrHarmony = (refHueDiffs, harmonyInvs) =>
       {
         hueDiff = 360 - hueDiff;
       }
-      // console.log('refHueDiff - harmony = hueDiff', refHueDiff, harmony, hueDiff);
       return hueDiff;
     });
-    // console.log('diffFromRef', diffFromRef);
 
     differences.push(Math.min(...diffFromRef));
   }
-  // console.log('differences', differences);
   const sumDiff = differences.reduce((a, b) => a + b, 0);
-  // console.log('sumDiff', sumDiff);
   return sumDiff;
 };
 const calHarmonyDiff = (refHsl) => {
@@ -221,7 +167,6 @@ const calHarmonyDiff = (refHsl) => {
   const colorDiffs = refHsl.map((col) => {
     let hueDiff = Math.abs(col.h - refHsl[0].h);
     hueDiff = hueDiff > 180 ? 360 - hueDiff : hueDiff;
-
     return hueDiff;
   });
   const harmonyIntervals = {
@@ -257,7 +202,7 @@ export async function getColorTemplates(pool, imageId, filepath, num)
   const brightestHsl = hslColors[0];
   const satLightWeight = 1;
 
-  const pureHues = hslColors.map((hsl) => ({ h: hsl.h, s: 100, l: 50 }));
+  // const pureHues = hslColors.map((hsl) => ({ h: hsl.h, s: 100, l: 50 }));
   const analogous = tuneHarmonies('analogous', 5, brightestHsl, hslColors, satLightWeight);
   const complementary = tuneHarmonies('complementary', 5, brightestHsl, hslColors, satLightWeight);
   const dblSplitComplement = tuneHarmonies('double-split-complementary', 5, brightestHsl, hslColors, satLightWeight);
@@ -266,12 +211,9 @@ export async function getColorTemplates(pool, imageId, filepath, num)
   const tetradic = tuneHarmonies('tetradic', 5, brightestHsl, hslColors, satLightWeight);
   const triadic = tuneHarmonies('triadic', 5, brightestHsl, hslColors, satLightWeight);
 
-  // console.log('color diffs', calHarmonyDiff(hslColors));
-
-  console.log('hsl', hslColors);
+  // console.log('hsl', hslColors);
   const palettes = {
     base: hslColors,
-    pureHues,
     analogous,
     complementary,
     dblSplitComplement,
@@ -350,33 +292,35 @@ async function insertHarmonyColor(pool, imageId, harmony, harmonyColors, diffFro
 }
 // break process image into few parts
 
-export async function processImage(pool, filename, category, user)
+export async function processImage(pool, filename, category, userId)
 {
   const filePath = imgFilePath(filename);
-  const imageId = await insertImage(pool, filename, category, user).catch(handleError);
+  const imageId = await insertImage(pool, filename, category, userId).catch(handleError);
   const hslColors = await getColorTemplates(pool, imageId, filePath, 5).catch(handleError);
 
   const baseColors = hslColors.base;
 
   const harmonicDiffs = calHarmonyDiff(baseColors);
+  console.log('harmonicDiffs', harmonicDiffs);
   const closestHarmony = harmonicDiffs[0];
-  const furthestHarmony = harmonicDiffs[harmonicDiffs.length - 1];
+  const harmonicDiffObj = {};
+  harmonicDiffs.forEach((harmony) => {
+    const harmonyType = harmony.harmony;
+    harmonicDiffObj[harmonyType] = harmony.value;
+  });
 
-  const closestColors = hslColors[closestHarmony.harmony];
-  const furthestColors = hslColors[furthestHarmony.harmony];
-  await insertBaseColor(pool, imageId, closestHarmony.harmony, covertHslToHex(baseColors), baseColors[0].h).catch(handleError);
-  const insertClosestCol = insertHarmonyColor(pool, imageId, closestHarmony.harmony, covertHslToHex(closestColors), closestHarmony.value);
-  const insertFurthestCol = insertHarmonyColor(pool, imageId, furthestHarmony.harmony, covertHslToHex(furthestColors), furthestHarmony.value);
+  const harmonyColors = { ...hslColors };
+  delete harmonyColors.base;
+  const insertBaseCol = insertBaseColor(pool, imageId, closestHarmony.harmony, covertHslToHex(baseColors), baseColors[0].h).catch(handleError);
 
-  await Promise.all([insertClosestCol, insertFurthestCol]).catch(handleError);
+  const insertHarmonyColors = Object.keys(harmonyColors).map((key) => insertHarmonyColor(pool, imageId, key, covertHslToHex(harmonyColors[key]), harmonicDiffObj[key]));
 
-  console.log(harmonicDiffs);
-  const colors = convertObjToHex(hslColors);
-  return { imageSrc: filename, colors };
+  await Promise.all([insertBaseCol, ...insertHarmonyColors]).catch(handleError);
+  return imageId;
 }
 
-export async function resizeAndProcessImg(pool, filename, filePath, category, user, maxSize)
-{ console.log(filePath);
+export async function resizeAndProcessImg(pool, filename, filePath, category, userId, maxSize)
+{
   await sharp(`${filePath}`)
     .resize(maxSize, maxSize, {
       fit: sharp.fit.inside,
@@ -386,10 +330,8 @@ export async function resizeAndProcessImg(pool, filename, filePath, category, us
     .toBuffer((err, buffer) => { if (err) {
       console.log('buffer', buffer); console.error('error with buffer');
     }
-    console.log('buffer', buffer);
-
     fs.writeFile(`${filePath}`, buffer, (e) => { if (e)console.error(e); });
     });
 
-  return processImage(pool, filename, category, user).catch(handleError);
+  return processImage(pool, filename, category, userId).catch(handleError);
 }

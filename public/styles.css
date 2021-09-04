@@ -1,5 +1,10 @@
+body {
+  /* background-color: white; */
+  background-color: #e0ded6;
+}
+
 .swatch {
-  display: inline-block;
+  /* display: inline-block; */
   border-radius: 50%;
   width: 3rem;
   height: 3rem;
@@ -23,6 +28,12 @@
 .swatch-text:target {
   color: black;
 }
+/* img {
+  height: auto;
+  width: auto;
+  max-width: 500px;
+  max-height: 500px;
+} */
 
 .tooltip.bottom,
 .tooltip-inner {
@@ -48,6 +59,22 @@ input[type="range"] {
   height: 8px;
   background: linear-gradient(
     to right,
+    hsl(0, 100%, 70%) 0%,
+    hsl(30, 100%, 70%) 8.3%,
+    hsl(60, 100%, 70%) 16.6%,
+    hsl(90, 100%, 70%) 25%,
+    hsl(120, 100%, 70%) 33.3%,
+    hsl(150, 100%, 70%) 41.6%,
+    hsl(180, 100%, 70%) 50%,
+    hsl(210, 100%, 70%) 58.3%,
+    hsl(240, 100%, 70%) 66.6%,
+    hsl(270, 100%, 70%) 75%,
+    hsl(300, 100%, 70%) 83.3%,
+    hsl(330, 100%, 70%) 91.6%,
+    hsl(360, 100%, 70%) 100%
+  );
+  /* background: linear-gradient(
+    to right,
     hsl(0, 100%, 88%) 0%,
     hsl(30, 100%, 88%) 8.3%,
     hsl(60, 100%, 88%) 16.6%,
@@ -61,7 +88,7 @@ input[type="range"] {
     hsl(300, 100%, 88%) 83.3%,
     hsl(330, 100%, 88%) 91.6%,
     hsl(360, 100%, 88%) 100%
-  );
+  ); */
 }
 
 .form-signin {

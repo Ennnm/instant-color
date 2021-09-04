@@ -1,51 +1,20 @@
 <%- include('header', {title: `All`}); -%>
 
 <body>
-  <%- include('nav', locals.numVisitors); -%> 
-  <div class=" row align-content-baseline"> 
-  <% locals.posts.forEach((post, index)=>{%>
-  <div class="col-sm-6 col-md-6 col-lg-4  mb-4">
-    <div
-      class="card bg-light border "
-      id="item-<%=post.id%>"
-    >
-      <div class="card-body">
-        <%-include('image-card', post); -%>
-        <div class="btn-group flex-wrap">
-          <a
-            href="/picture/<%=post.id%>"
-            class="btn btn-outline-secondary btn-sm stretched-link"
-            >Expand</a
-          >
-          <a
-            href="/picture/<%=post.id%>/edit"
-            class="btn btn-outline-secondary btn-sm"
-            >Edit</a
-          >
-          <form
-            action="/picture/<%=post.id%>/delete?_method=DELETE"
-            method="POST"
-            class="d-inline-block"
-          >
-            <input
-              type="submit"
-              value="Delete"
-              id="delete"
-              class="btn btn-outline-secondary btn-sm"
-              style="border-radius: 0"
-            />
-          </form>
-        </div>
+  <%- include('nav', locals.numVisitors); -%>
+  <div class="row d-flex align-items-baseline mt-4 mx-1 mx-sm-4">
+    <% locals.posts.forEach((post, index)=>{%>
+      <div class="col-sm-6 col-md-4 col-lg-3 col-xl-3 mb-4">
+        <%-include('image-card', post, enableDelete); -%>
+     <% }) %>
       </div>
+    <% if(locals.comments){ %> <% comments.forEach(comment => { %>
+    <div class="text-primary">
+      <h6>
+        <small
+          >Sighting: <%=comment.sight_id%> Comment: <%=comment.comment%></small
+        >
+      </h6>
     </div>
-  </div>
-  <% }) %> <% if(locals.comments){ %> <% comments.forEach(comment => { %>
-  <div class="text-primary">
-    <h6>
-      <small
-        >Sighting: <%=comment.sight_id%> Comment: <%=comment.comment%></small
-      >
-    </h6>
-  </div>
-  <% })} %>
+    <% })} %>
 </body>

@@ -1,7 +1,6 @@
 /* eslint-disable prefer-destructuring */
 import jssha from 'jssha';
 import dotenv from 'dotenv';
-import { request } from 'express';
 
 const { SALT } = process.env;
 
@@ -16,27 +15,30 @@ export const getHash = (input) => {
   return shaObj.getHash('HEX');
 };
 
-export const checkAuth = (pool) => (req, res, next) => {
-  req.isUserLoggedIn = false;
+export const restrictToLoggedIn = (pool) => (request, response, next) => {
+  // is the user logged in? Use the other middleware.
+  if (request.isUserLoggedIn === false) {
+    response.redirect('/login');
+  } else {
+    // The user is logged in. Get the user from the DB.
+    const userQuery = 'SELECT * FROM users WHERE id=$1';
+    pool.query(userQuery, [request.cookies.userId])
+      .then((userQueryResult) => {
+        // can't find the user based on their cookie.
+        if (userQueryResult.rows.length === 0) {
+          response.redirect('/login');
+          return;
+        }
 
-  if (req.cookies.loggedIn && req.cookies.userId) {
-    const hash = getHash(req.cookies.userId);
+        // attach the DB query result to the request object.
+        request.user = userQueryResult.rows[0];
 
-    if (req.cookies.loggedIn === hash) {
-      request.isUserLoggedIn = true;
-    }
+        // go to the route callback.
+        next();
+      }).catch((error) => {
+        response.redirect('/login');
+      });
   }
-
-  const values = [req.cookies.userId];
-
-  pool.query('SELECT * FROM users id=$1', values, (err, result) => {
-    if (err || res.rows.length < 1)
-    {
-      res.status(503).send('Sorry, you can\'t access this page');
-    }
-    req.user = result.row[0];
-    next();
-  });
 };
 
 export const dummy = () => {};

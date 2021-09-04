@@ -2,14 +2,14 @@
 <body>
   <%- include('nav', locals.numVisitors); -%>
 
-        <% if(locals.err){ %>  
+      <% if(locals.err){ %>  
         <div class="alert alert-warning alert-dismissible fade show" role="alert">
           <strong><%=locals.err%></strong> 
-
-
         </div>
       <%   } %> 
-  <main class="form-signin">
+
+<!-- <div class=' bg-light col-10 col-sm-6 col-md-4 mt-4 justify-content-center'></div> -->
+  <main class="form-signin bg-light col-10 col-sm-6 col-md-4 mt-4 justify-content-center">
     <form action="/upload" method="post" enctype="multipart/form-data">
       <div class="text-center">
         <img class="mb-4 text-center" src="upload-cat.gif" alt="" width="150" />
@@ -30,33 +30,34 @@
         <div class="mb-3">
           <input class="form-control" type="file" name="photo" id="photo" name="photo" accept="image/jpeg" oninput="disable_url()">
         </div>
-      <div class="form-floating"></div>
+      <div class=""></div>
         <input
           class="form-control"
           list="datalistOptions"
           id="category"
+          name="category"
           placeholder="Category"
+          autocomplete="off"
         />
-        <datalist id="category" name="category">
-          <option value="San Francisco"></option>
+        <datalist id="datalistOptions" >
+          <% if(locals.categories){categories.forEach(category=>{%>
+            <option value=<%=category%>></option>
+          <% })}%>
         </datalist>
       </div>
+      
       <button class="w-100 btn btn-lg btn-primary mt-4" type="submit">
         Upload
       </button>
       <p class="mt-5 mb-3 text-muted">&copy; 2017–2021</p>
     </form>
   </main>
-
-
-
   <script type="text/javascript">
     function disable_file (){
        $("#photo").prop('disabled', true);
     }
     function disable_url (){
        $("#imgUrl").prop('disabled', true);
-
     }
   </script>
 </body>
