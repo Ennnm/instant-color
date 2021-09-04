@@ -364,12 +364,38 @@ const indexHandler = async (req, res) => {
   const posts = await Promise.all(poolPromises).catch(handleError);
   res.render('index', { posts, enableDelete: false, url: '' });
 };
+const convertToHueBnds = (value) => {
+  let hueValue = value;
+  if (value > 360)
+  {
+    hueValue = value - 360;
+  }
+  if (value < 0)
+  {
+    hueValue = value + 360;
+  }
+  return hueValue;
+};
 
-const indexColorHandler = (req, res) => {
-  const { colorPicker } = req.body;
+const indexColorHandler = async (req, res) => {
+  const { colorPicker } = req.query;
   console.log('color picker:', colorPicker);
-  // get all posts that are in range of the color
-  // res.render('index', { posts, enableDelete: false });
+  const range = 30;
+  const lowerHueBnd = convertToHueBnds(colorPicker - range);
+  const upperHueBnd = convertToHueBnds(colorPicker + range);
+
+  const colQuery = 'SELECT main_hue, images.id FROM images INNER JOIN base_colors ON images.id = base_colors.image_id WHERE base_colors.main_hue>$1 AND base_colors.main_hue<$2 ORDER BY main_hue ASC';
+  const { rows } = await pool.query(colQuery, [lowerHueBnd, upperHueBnd]).catch(handleError);
+
+  const ids = rows.map((row) => row.id);
+
+  const poolPromises = [];
+  ids.forEach((id) => {
+    poolPromises.push(getColorsFromImgId(pool, id, false));
+  });
+
+  const posts = await Promise.all(poolPromises).catch(handleError);
+  res.render('index', { posts, enableDelete: false, url: '' });
 };
 
 const deletePic = (req, res) => {
@@ -415,7 +441,8 @@ const userPosts = async (req, res) => {
 
 const userFav = () => {};
 app.get('/?', indexHandler);
-app.post('/?', indexColorHandler);
+app.get('/colorFilter', indexColorHandler);
+app.post('/colorFilter', indexColorHandler);
 app.get('/upload', imageUpload);
 app.post('/upload', mutlerUpload.single('photo'), acceptUpload);
 
