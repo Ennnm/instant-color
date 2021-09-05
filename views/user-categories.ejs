@@ -1,45 +1,37 @@
 <%- include('header', {title: `All`}); -%>
 <body>
   <%- include('nav', locals.numVisitors); -%>
-  <div class="container ">
+  <div class="container-lg  px-0 mt-4">
     <div class="row col-12 mt-4 mx-auto">
-      <nav
-        id="category-bar"
-        class="
-          d-block 
-          d-sm-inline-block
-          navbar navbar-light
-          bg-light
-          flex-column
-          align-items-stretch
-          p-3
-          col-12
-          col-sm-2
-        "
-      >
-        <a class="navbar-brand" href="#">Categories</a>
-        <nav class="nav nav-pills flex-column">
+      <div class="d-grid gap-2 d-md-flex justify-content-md-end mb-sm-4 ">
+        <a href="/home" class="btn btn-success btn-sm ">All</a>
+      </div>
+      <div class="flex-column
+      d-block 
+      d-sm-inline-block
+      col-12
+      col-sm-3
+      col-lg-2
+      pt-1
+      ">
+        <h4 class='d-none d-sm-block'>Categories</h4>
           <% categoriesObj.forEach((category)=>{ %>
-          <a class="nav-link" href="#category-<%=category.id%>"
-            ><%=category.category%></a
-          >
+          <a class="btn btn-outline-success btn-sm m-1 d-inline-block rounded-pill" href="#category-<%=category.id%>" ><%=category.category%></a>
           <% }) %>
-        </nav>
-      </nav>
+      </div>
+
       <div
         data-bs-spy="scroll"
         data-bs-target="#category-bar"
         data-bs-offset="0"
         tabindex="0"
-        class="d-flex d-block 
-          d-sm-inline-block row col-12 col-sm-10"
-      >
+        class="d-sm-inline-block row col-12 col-sm-9 col-lg-10  mx-0 ">
         <% categoriesObj.forEach((category)=>{ %>
-        <div id="category-<%=category.id%>">
-          <h4><%=category.category %></h4>
-          <div class="row d-flex align-items-baseline mt-4 ">
+        <div id="category-<%=category.id%>" class="card-body mt-2 mb-4 pt-sm-3 p-1 p-sm-3 bg-transparent  " style="border: Silver solid 2px; border-radius:20px; " >
+          <h4 class="text-center " ><%=category.category %></h4>
+          <div class="row" >
             <% category.posts.forEach((post, index)=>{%>
-            <div class=" col-lg-6 col-xl-4 mb-4">
+            <div class=" col-12 col-lg-6 col-xl-4 mb-4 " >
               <%-include('image-card', post, enableDelete); -%>
             </div>
             <% }) %>

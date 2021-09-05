@@ -2,11 +2,13 @@
 
 <body>
   <%- include('nav', locals.numVisitors); -%>
-  <div class="row d-flex align-items-baseline mt-4 mx-1 mx-sm-4">
-    <% locals.posts.forEach((post, index)=>{%>
-    <div class="col-sm-6 col-lg-4 col-xl-3 mb-4">
-      <%-include('image-card', post, enableDelete); -%>
+  <div class="container-sm">
+    <div class="row d-flex align-items-baseline mt-4 mx-1 mx-sm-4">
+      <% locals.posts.forEach((post, index)=>{%>
+      <div class="col-12 col-lg-6 col-xl-4 mb-4 ">
+        <%-include('image-card', post, enableDelete); -%>
+      </div>
+      <% }) %>
     </div>
-    <% }) %>
   </div>
 </body>

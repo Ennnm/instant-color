@@ -2,14 +2,15 @@
 
 <body>
   <%- include('nav', locals.numVisitors); -%>
-  <div class="row d-flex align-items-baseline mt-4 mx-1 mx-sm-4">
-    <div class="d-grid gap-2 d-md-flex justify-content-md-end mb-4 ">
-      <a href="/home" class="btn btn-outline-secondary btn-sm ">All</a>
-      <a href="/usercategories/<%=id%>" class="btn btn-outline-secondary btn-sm ">Categories</a>
-    </div>
-    <% locals.posts.forEach((post, index)=>{%>
-      <div class="col-sm-6 col-lg-4 col-xl-3 mb-4">
-        <%-include('image-card', post, enableDelete); -%>
+  <div class="container-sm">
+    <div class="row d-flex align-items-baseline mt-4 mx-1 mx-sm-4">
+      <div class="d-grid gap-2 d-md-flex justify-content-md-end mb-4 ">
+        <a href="/usercategories/<%=id%>" class="btn btn-success btn-sm ">Categories</a>
       </div>
+      <% locals.posts.forEach((post, index)=>{%>
+        <div class="col-12 col-lg-6 col-xl-4 mb-4 ">
+          <%-include('image-card', post, enableDelete); -%>
+        </div>    
     <% }) %>
+  </div>
 </body>

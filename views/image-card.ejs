@@ -21,15 +21,15 @@
   >
     <div class="d-flex justify-content-between">
       <span>Hue: <%=hue%>/360</span>
-      <span>Created <%=createdat.toISOString().split('T')[0]%></span>
+      <!-- <span>Created <%=createdat.toISOString().split('T')[0]%></span> -->
     </div>
     <div class="d-flex justify-content-between">
-      <span><%=baseHarmony%></span>
-      <span>Δ <%=harmonicDiff[0]%></span>
+      <span class="col d-block text-start"><%=baseHarmony%></span>
+      <span class="col-2 d-block">Δ <%=harmonicDiff[0]%></span>
     </div>
   </div>
   <!-- category -->
-  <div class="card-body justify-conent-center">
+  <div class="card-body justify-conent-center bg-white">
     <img
       src="../<%= imageSrc %>"
       class="img-fluid"
@@ -58,7 +58,7 @@
     </div>
     <% }) %>
   </div>
-  <div class="card-footer d-flex justify-content-end">
+  <div class="card-footer d-flex justify-content-end" style="background-color: <%=colTemplates[0][0] + 10%>">
     <div class="btn-group flex-wrap">
       <% if(locals.enableExpansion===true){%>
       <a href="/picture/<%=id%>" class="btn btn-outline-secondary btn-sm"
