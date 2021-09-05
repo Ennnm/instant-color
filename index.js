@@ -238,6 +238,7 @@ const logUserOut = (req, res) => {
 
 const getColorsFromImgId = async (pool, id, getHarmonyCols) => {
   const postObj = {};
+  console.log('id in get color', id);
   await pool.query('SELECT users_id , path, created_at FROM images WHERE id = $1', [id])
     .then((result) => {
       if (result.rows.length === 0)
@@ -257,16 +258,18 @@ const getColorsFromImgId = async (pool, id, getHarmonyCols) => {
       const baseColProp = result[0].rows[0];
       postObj.baseHarmony = baseColProp.type.replace(/-/g, ' ');
       postObj.hue = baseColProp.main_hue;
+      console.log('baseColProp', baseColProp);
 
       const colTempQueries = [];
       colTempQueries.push(pool.query('SELECT * FROM color_templates WHERE id = $1', [baseColProp.template_id]));
 
       const harmonyColProp = result[1].rows;
-
+      console.log('baseColProp.template_id', baseColProp.template_id);
       // get closest and furthest in order
       harmonyColProp.sort((a, b) => a.base_diff - b.base_diff);
       postObj.harmonies = ['base', ...harmonyColProp.map((h) => h.type.replace(/-/g, ' '))];
       postObj.harmonicDiff = harmonyColProp.map((h) => h.base_diff);
+
       if (getHarmonyCols)
       {
         postObj.harmonicDiff = [postObj.harmonicDiff[0], ...postObj.harmonicDiff];
@@ -278,14 +281,20 @@ const getColorsFromImgId = async (pool, id, getHarmonyCols) => {
         postObj.harmonicDiff = [postObj.harmonicDiff[0]];
         postObj.harmonies = ['base'];
       }
+      console.log(' postObj.harmonicDiff', postObj.harmonicDiff);
+      console.log(' colTempQueries', colTempQueries);
       return Promise.all(colTempQueries);
     }).then((results) => {
       // extract hexcolors from templates
+      console.log('results', results.map((result) => result.rows));
+
       const hexColObj = results.map((result) => result.rows[0]);
+      console.log('hexColObj', hexColObj);
       const hexCol = hexColObj.map((obj) => [obj.hex_color1, obj.hex_color2, obj.hex_color3, obj.hex_color4, obj.hex_color5]);
       postObj.colTemplates = hexCol;
     })
-    .catch((e) => console.error(e));
+    .catch((e) => {
+      console.error(e); });
 
   return postObj;
 };

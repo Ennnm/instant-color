@@ -55,6 +55,8 @@ export async function insertImage(pool, filename, category = '', userId = 0)
 
 const repeatArr = (arr, length) => {
   const newArr = [...arr];
+  console.log('newArr', newArr);
+
   if (arr.length > length)
   {
     return arr.splice(0, length);
@@ -193,6 +195,11 @@ export async function getColorTemplates(pool, imageId, filepath, num)
   const colors = await ColorThief.getPalette(filepath, num * 2).catch(handleError);
   let hslColors = colors.map((c) => colord(`rgb(${c.join()})`).toHsl());
   hslColors = hslColors.filter((c) => c.l > 30 && c.l < 90).slice(0, num);
+  console.log('hslCikir==', hslColors);
+  if (hslColors.length < num)
+  {
+    hslColors = repeatArr(hslColors, num);
+  }
   hslColors = sortHues(hslColors);
   // assume brightest color s: near 100, l: near 50, smallest deviation
   const deviationFromPurity = hslColors.map((hsl) => (100 - hsl.s) + (Math.abs(hsl.l - 50)));
@@ -260,10 +267,11 @@ const convertHarmonyName = (objHarmony) => {
 };
 async function insertBaseColor(pool, imageId, closestHarmony, baseColorsHex, mainHue)
 {
+  console.log('baseColorsHex', baseColorsHex);
   const colTempId = await insertColorTemplate(pool, baseColorsHex).catch(handleError);
 
   const harmonyInTable = convertHarmonyName(closestHarmony);
-  pool
+  return pool
     .query('SELECT id FROM harmonies WHERE type = $1', [harmonyInTable])
     .then((result) => {
       const harmonyId = result.rows[0].id;
@@ -315,7 +323,8 @@ export async function processImage(pool, filename, category, userId)
 
   const insertHarmonyColors = Object.keys(harmonyColors).map((key) => insertHarmonyColor(pool, imageId, key, covertHslToHex(harmonyColors[key]), harmonicDiffObj[key]));
 
-  await Promise.all([insertBaseCol, ...insertHarmonyColors]).catch(handleError);
+  const insertColors = await Promise.all([insertBaseCol, ...insertHarmonyColors]).catch(handleError);
+  console.log('insertColors', insertColors);
   return imageId;
 }
 

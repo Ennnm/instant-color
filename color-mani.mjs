@@ -30,6 +30,7 @@ export async function downloadSmallImg(url, filepath, maxSize) {
       fit: sharp.fit.inside,
       withoutEnlargement: true,
     })
+    .jpeg({ mozjpeg: true })
     .withMetadata()
     .toFile(filepath)
     .then((info) => console.log('info in dlSmallImg', info))
