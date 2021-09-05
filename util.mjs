@@ -41,4 +41,6 @@ export const restrictToLoggedIn = (pool) => (request, response, next) => {
   }
 };
 
+export const captitalizeFirstLetter = (string) => string.charAt(0).toUpperCase() + string.slice(1);
+
 export const dummy = () => {};

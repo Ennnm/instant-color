@@ -4,17 +4,9 @@
   <%- include('nav', locals.numVisitors); -%>
   <div class="row d-flex align-items-baseline mt-4 mx-1 mx-sm-4">
     <% locals.posts.forEach((post, index)=>{%>
-      <div class="col-sm-6 col-md-4 col-lg-3 col-xl-3 mb-4">
-        <%-include('image-card', post, enableDelete); -%>
-     <% }) %>
-      </div>
-    <% if(locals.comments){ %> <% comments.forEach(comment => { %>
-    <div class="text-primary">
-      <h6>
-        <small
-          >Sighting: <%=comment.sight_id%> Comment: <%=comment.comment%></small
-        >
-      </h6>
+    <div class="col-sm-6 col-md-4 col-lg-3 col-xl-3 mb-4">
+      <%-include('image-card', post, enableDelete); -%>
     </div>
-    <% })} %>
+    <% }) %>
+  </div>
 </body>

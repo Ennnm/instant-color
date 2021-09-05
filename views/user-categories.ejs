@@ -1,0 +1,47 @@
+<%- include('header', {title: `All`}); -%>
+<body>
+  <%- include('nav', locals.numVisitors); -%>
+  <div class="row mt-4 mx-1 mx-sm-4">
+    <nav
+      id="category-bar"
+      class="
+        d-inline-block
+        navbar navbar-light
+        bg-light
+        flex-column
+        align-items-stretch
+        p-3
+        col-2
+      "
+    >
+      <a class="navbar-brand" href="#">Categories</a>
+      <nav class="nav nav-pills flex-column">
+        <% categoriesObj.forEach((category)=>{ %>
+        <a class="nav-link" href="#category-<%=category.id%>"
+          ><%=category.category%></a
+        >
+        <% }) %>
+      </nav>
+    </nav>
+    <div
+      data-bs-spy="scroll"
+      data-bs-target="#category-bar"
+      data-bs-offset="0"
+      tabindex="0"
+      class="d-flex row col-10"
+    >
+      <% categoriesObj.forEach((category)=>{ %>
+      <div id="category-<%=category.id%>">
+        <h4><%=category.category %></h4>
+        <div class="row d-flex align-items-baseline mt-4 mx-1 mx-sm-4">
+          <% category.posts.forEach((post, index)=>{%>
+          <div class=" col-lg-6 col-xl-4 mb-4">
+            <%-include('image-card', post, enableDelete); -%>
+          </div>
+          <% }) %>
+        </div>
+      </div>
+      <% }) %>
+    </div>
+  </div>
+</body>

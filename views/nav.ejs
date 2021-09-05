@@ -65,18 +65,26 @@
           Sort
         </a>
         <div class="dropdown-menu" aria-labelledby="navbarDropdown">
-          <a class="dropdown-item" href="/<%=url%>?sort=hue&order=ASC">Hues</a>
-          <a class="dropdown-item" href="/<%=url%>?sort=hue&order=DESC"
+          <a class="dropdown-item" href="/<%=locals.url%>?sort=hue&order=ASC"
+            >Hues</a
+          >
+          <a class="dropdown-item" href="/<%=locals.url%>?sort=hue&order=DESC"
             >Hues reverse</a
           >
-          <a class="dropdown-item" href="/<%=url%>?sort=popular&order=DESC"
+          <a
+            class="dropdown-item"
+            href="/<%=locals.url%>?sort=popular&order=DESC"
             >Popularity</a
           >
           <div class="dropdown-divider"></div>
-          <a class="dropdown-item" href="/<%=url%>?sort=dateCreated&order=DESC"
+          <a
+            class="dropdown-item"
+            href="/<%=locals.url%>?sort=dateCreated&order=DESC"
             >Freshness</a
           >
-          <a class="dropdown-item" href="/<%=url%>?sort=dateCreated&order=ASC"
+          <a
+            class="dropdown-item"
+            href="/<%=locals.url%>?sort=dateCreated&order=ASC"
             >Oldness</a
           >
         </div>
