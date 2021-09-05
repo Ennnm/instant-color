@@ -507,6 +507,6 @@ app.delete('/picture/:id/delete', deletePic);
 
 app.get('/home', restrictToLoggedIn(pool), home);
 app.get('/user/:id?', userPosts);
-app.get('/user/categories/:id?', userPostsCatergory);
+app.get('/usercategories/:id?', userPostsCatergory);
 app.get('/fav/', restrictToLoggedIn(pool), userFav);
 // app.get('/users/?', usersPosts);
