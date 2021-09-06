@@ -244,7 +244,6 @@ const getColorsFromImgId = async (pool, id, getHarmonyCols) => {
       if (result.rows.length === 0)
       {
         postObj.err = 'Picture does not exist';
-        // res.render('post', postObj);
         return;
       }
       postObj.id = id;
@@ -436,13 +435,24 @@ const home = (req, res) => {
     req.status(403).send('sorry');
   }
   else {
-    res.redirect(`/user/${userId}`);
+    res.redirect(`/usercategories/${userId}`);
   }
 };
+
+const getUsernameFromId = async (id) => {
+  let username;
+  await pool.query(`SELECT username FROM users WHERE users.id =${id}`)
+    .then((result) => {
+      username = captitalizeFirstLetter(result.rows[0].username);
+    }).catch(handleError);
+  return username;
+};
+
 const userPosts = async (req, res) => {
   const { id } = req.params;
   const { sort, filter, order } = req.query;
   const limitNum = 100;
+  const username = await getUsernameFromId(id);
 
   const ids = await getIdsAfterSortOrFilter(limitNum, sort, order, filter, id);
 
@@ -454,14 +464,14 @@ const userPosts = async (req, res) => {
   const posts = await Promise.all(poolPromises).catch(handleError);
   console.log('posts', posts);
   res.render('user-all', {
-    posts, enableDelete: true, url: `user/${id}`, enableExpansion: true, id,
+    posts, enableDelete: true, url: `user/${id}`, enableExpansion: true, id, username,
   });
 };
 
 const userPostsCatergory = async (req, res) => {
   const { id } = req.params;
   const limitNum = 100;
-
+  const username = await getUsernameFromId(id);
   const categoryQuery = 'SELECT DISTINCT categories.id, categories.category FROM categories INNER JOIN image_categories ON image_categories.category_id = categories.id INNER JOIN images ON images.id = image_categories.image_id WHERE images.users_id=$1';
 
   const { rows } = await pool.query(categoryQuery, [id]).catch(handleError);
@@ -471,7 +481,6 @@ const userPostsCatergory = async (req, res) => {
 
   for (let i = 0; i < categoriesObj.length; i += 1) {
     const refCatObj = categoriesObj[i];
-    const imagesId = [];
     // get all images with that id
     const catImagesQuery = 'SELECT images.id FROM images INNER JOIN image_categories ON image_categories.image_id = images.id INNER JOIN categories ON image_categories.category_id = categories.id WHERE categories.id=$1';
     // eslint-disable-next-line no-await-in-loop
@@ -494,10 +503,52 @@ const userPostsCatergory = async (req, res) => {
   }
 
   console.log(categoriesObj);
-  res.render('user-categories', { categoriesObj, enableDelete: true, enableExpansion: true });
+  res.render('user-categories', {
+    categoriesObj, enableDelete: true, enableExpansion: true, username, id,
+  });
 };
 
 const userFav = () => {};
+
+const usersHandler = async (req, res) => {
+  const { id } = req.params;
+  const limitNum = 100;
+  const username = await getUsernameFromId(id);
+  const categoryQuery = 'SELECT DISTINCT categories.id, categories.category FROM categories INNER JOIN image_categories ON image_categories.category_id = categories.id INNER JOIN images ON images.id = image_categories.image_id WHERE images.users_id=$1';
+
+  const { rows } = await pool.query(categoryQuery, [id]).catch(handleError);
+
+  const categoriesObj = rows;
+  categoriesObj.forEach((catObj) => catObj.category = captitalizeFirstLetter(catObj.category));
+
+  for (let i = 0; i < categoriesObj.length; i += 1) {
+    const refCatObj = categoriesObj[i];
+    // get all images with that id
+    const catImagesQuery = 'SELECT images.id FROM images INNER JOIN image_categories ON image_categories.image_id = images.id INNER JOIN categories ON image_categories.category_id = categories.id WHERE categories.id=$1';
+    // eslint-disable-next-line no-await-in-loop
+    await pool.query(catImagesQuery, [refCatObj.id]).catch(handleError)
+      .then(
+        (result) => {
+          const imageIds = result.rows.map((row) => row.id);
+          const poolImgPromises = [];
+
+          imageIds.forEach((index) => {
+            poolImgPromises.push(getColorsFromImgId(pool, index, false));
+          });
+          return Promise.all(poolImgPromises);
+        },
+      ).then((result) => {
+        refCatObj.posts = result;
+        console.log('result', result);
+      })
+      .catch(handleError);
+  }
+
+  console.log(categoriesObj);
+  res.render('user-categories', {
+    categoriesObj, enableDelete: true, enableExpansion: true, username, id,
+  });
+};
 app.get('/?', indexHandler);
 app.get('/colorFilter', indexColorHandler);
 app.post('/colorFilter', indexColorHandler);
@@ -511,11 +562,10 @@ app.post('/login', acceptLogin);
 app.delete('/logout', logUserOut);
 
 app.get('/picture/:id', renderPic);
-// app.get('/picture/:id/expand', renderExpandedPic);
 app.delete('/picture/:id/delete', deletePic);
 
 app.get('/home', restrictToLoggedIn(pool), home);
 app.get('/user/:id?', userPosts);
 app.get('/usercategories/:id?', userPostsCatergory);
-app.get('/fav/', restrictToLoggedIn(pool), userFav);
-// app.get('/users/?', usersPosts);
+// app.get('/fav/', restrictToLoggedIn(pool), userFav);
+app.get('/users/?', usersHandler);

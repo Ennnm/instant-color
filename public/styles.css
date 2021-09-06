@@ -1,6 +1,8 @@
 body {
   /* background-color: white; */
   background-color: #e0ded6;
+  /* font-family: "Roboto Mono", monospace; */
+  /* font-family: "Ubuntu", sans-serif; */
 }
 
 .swatch {
@@ -124,24 +126,22 @@ input[type="range"] {
 .rainbow-text {
   /* font-size: 72px; */
   background: -webkit-linear-gradient(
-    0deg,
+    -145deg,
     /* hsl(0 80% 50%),
     hsl(30.942 100% 37.268%),
-    hsl(45.617 100% 32.426%),
-    hsl(62.599 100% 28.853%),
+    hsl(45.617 100% 32.426%), */
+      hsl(62.599 100% 28.853%),
     hsl(90 50% 45%),
-    hsl(90 50% 45%), */
-      hsl(160.76 100% 32.755%),
+    hsl(90 50% 45%),
+    hsl(160.76 100% 32.755%),
     hsl(179.62 100% 30.893%),
     hsl(191.74 100% 36.32%),
     hsl(210 80% 55%),
     hsl(210 80% 55%),
     hsl(255.77 69.1% 67.1%),
-    hsl(309.27 60.619% 54.117%)
-      /* ,
-    hsl(329.85 100% 44.736%)
-    ,
-    hsl(0 80% 50%) */
+    hsl(309.27 60.619% 54.117%),
+    hsl(329.85 100% 44.736%),
+    hsl(0 80% 50%)
   );
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;

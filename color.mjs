@@ -55,7 +55,6 @@ export async function insertImage(pool, filename, category = '', userId = 0)
 
 const repeatArr = (arr, length) => {
   const newArr = [...arr];
-  console.log('newArr', newArr);
 
   if (arr.length > length)
   {
@@ -194,8 +193,7 @@ export async function getColorTemplates(pool, imageId, filepath, num)
 {
   const colors = await ColorThief.getPalette(filepath, num * 2).catch(handleError);
   let hslColors = colors.map((c) => colord(`rgb(${c.join()})`).toHsl());
-  hslColors = hslColors.filter((c) => c.l > 30 && c.l < 90).slice(0, num);
-  console.log('hslCikir==', hslColors);
+  hslColors = hslColors.filter((c) => c.l > 20 && c.l < 90).slice(0, num);
   if (hslColors.length < num)
   {
     hslColors = repeatArr(hslColors, num);
@@ -218,7 +216,6 @@ export async function getColorTemplates(pool, imageId, filepath, num)
   const tetradic = tuneHarmonies('tetradic', 5, brightestHsl, hslColors, satLightWeight);
   const triadic = tuneHarmonies('triadic', 5, brightestHsl, hslColors, satLightWeight);
 
-  // console.log('hsl', hslColors);
   const palettes = {
     base: hslColors,
     analogous,
@@ -267,7 +264,6 @@ const convertHarmonyName = (objHarmony) => {
 };
 async function insertBaseColor(pool, imageId, closestHarmony, baseColorsHex, mainHue)
 {
-  console.log('baseColorsHex', baseColorsHex);
   const colTempId = await insertColorTemplate(pool, baseColorsHex).catch(handleError);
 
   const harmonyInTable = convertHarmonyName(closestHarmony);
@@ -324,7 +320,6 @@ export async function processImage(pool, filename, category, userId)
   const insertHarmonyColors = Object.keys(harmonyColors).map((key) => insertHarmonyColor(pool, imageId, key, covertHslToHex(harmonyColors[key]), harmonicDiffObj[key]));
 
   const insertColors = await Promise.all([insertBaseCol, ...insertHarmonyColors]).catch(handleError);
-  console.log('insertColors', insertColors);
   return imageId;
 }
 

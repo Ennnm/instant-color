@@ -4,8 +4,11 @@
   <%- include('nav', locals.numVisitors); -%>
   <div class="container-sm">
     <div class="row d-flex align-items-baseline mt-4 mx-1 mx-sm-4">
-      <div class="d-grid gap-2 d-md-flex justify-content-md-end mb-4 ">
-        <a href="/usercategories/<%=id%>" class="btn btn-success btn-sm ">Categories</a>
+      <div class=" d-flex bd-highlight mb-3">
+        <h1 class="me-auto"><%=username%>'s images </h1>
+        <div class="d-flex align-items-center">
+          <a href="/usercategories/<%=id%>" class="btn btn-success btn-sm">Categories</a>
+        </div>
       </div>
       <% locals.posts.forEach((post, index)=>{%>
         <div class="col-12 col-lg-6 col-xl-4 mb-4 ">
