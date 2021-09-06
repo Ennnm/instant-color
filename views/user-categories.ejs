@@ -1,4 +1,4 @@
-<%- include('header', {title: `All`}); -%>
+<%- include('header', {title: `${username}'s hues`}); -%>
 <body>
   <%- include('nav', locals.numVisitors); -%>
   <div class="container-lg  px-0 mt-4">
@@ -9,7 +9,7 @@
           <a href="/user/<%=id%>" class="btn btn-outline-secondary btn-sm">View all</a>
         </div>
       </div>
-      <%-include('pics-by-categories', {categoriesObj, enableDelete: true, enableExpansion: true}); -%>
+      <%-include('pics-by-categories', {categoriesObj, enableDelete, enableExpansion}); -%>
     </div>
   </div>
 </body>

@@ -29,16 +29,15 @@
     </div>
   </div>
   <!-- category -->
-  <div class="card-body justify-conent-center bg-white">
+  <div class="card-body justify-content-center bg-white">
     <img
       src="../<%= imageSrc %>"
       class="img-fluid"
       alt="target-image"
       class="target-img"
     />
-
     <% harmonies.forEach((h, index)=>{ %>
-    <div class="row swatches mt-1 mx-auto">
+    <div class="row swatches mt-1 mx-auto ">
       <% colTemplates[index].forEach((color, index2)=>{ %>
       <div class="swatch" style="background-color: <%=color%>">
         <span
@@ -65,9 +64,10 @@
         >Expand</a
       >
       <% } %>
+<!--       
       <a href="/picture/<%=id%>/fav" class="btn btn-outline-secondary btn-sm"
         >Favorite</a
-      >
+      > -->
       <% if(locals.enableDelete===true){ %>
       <form
         action="/picture/<%=id%>/delete?_method=DELETE"

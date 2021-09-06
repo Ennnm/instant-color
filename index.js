@@ -86,7 +86,6 @@ const imageUpload = async (req, res) => {
     const { rows } = await pool.query(`SELECT category FROM categories INNER JOIN image_categories on categories.id = image_categories.category_id INNER JOIN images ON image_categories.image_id = images.id WHERE images.users_id=${userId}`);
     // const sqlQuery = ;
     const categories = rows.map((obj) => obj.category);
-    console.log('categories', categories);
     res.render('upload', { categories });
   }
   else {
@@ -103,8 +102,6 @@ const acceptUpload = async (req, res) => {
   const { userId, loggedIn } = req.cookies;
   let { imgUrl, category } = req.body;
   category = captitalizeFirstLetter(category);
-  console.log('user', userId);
-  console.log('loggedIn', loggedIn);
   if (req.file)
   {
     const { filename, path } = req.file;
@@ -127,7 +124,6 @@ const acceptUpload = async (req, res) => {
     await downloadSmallImg(imgUrl, filepath, maxSize)
       .then(() => processImage(pool, filename, category, userId))
       .then((imageId) => {
-        console.log('imageId', imageId);
         res.redirect(`/picture/${imageId}`);
       })
       .catch((e) => {
@@ -168,7 +164,6 @@ const acceptSignUp = (req, res) => {
   const usernameQuery = 'SELECT EXISTS (SELECT 1 FROM users WHERE username =$1 )';
   pool.query(usernameQuery, [req.body.username])
     .then((result) => {
-      console.log(result);
       if (result.rows[0].exists === true)
       {
         obj.err = 'Username exists, choose another one.';
@@ -176,7 +171,6 @@ const acceptSignUp = (req, res) => {
       }
       return pool.query('INSERT INTO users (username, password) VALUES ($1, $2) RETURNING id', values);
     }).then((result) => {
-      console.log(result.rows);
       const userId = result.rows[0].id;
       res.cookie('loggedIn', getHash(userId));
       res.cookie('userId', userId);
@@ -238,7 +232,6 @@ const logUserOut = (req, res) => {
 
 const getColorsFromImgId = async (pool, id, getHarmonyCols) => {
   const postObj = {};
-  console.log('id in get color', id);
   await pool.query('SELECT users_id , path, created_at FROM images WHERE id = $1', [id])
     .then((result) => {
       if (result.rows.length === 0)
@@ -257,13 +250,11 @@ const getColorsFromImgId = async (pool, id, getHarmonyCols) => {
       const baseColProp = result[0].rows[0];
       postObj.baseHarmony = baseColProp.type.replace(/-/g, ' ');
       postObj.hue = baseColProp.main_hue;
-      console.log('baseColProp', baseColProp);
 
       const colTempQueries = [];
       colTempQueries.push(pool.query('SELECT * FROM color_templates WHERE id = $1', [baseColProp.template_id]));
 
       const harmonyColProp = result[1].rows;
-      console.log('baseColProp.template_id', baseColProp.template_id);
       // get closest and furthest in order
       harmonyColProp.sort((a, b) => a.base_diff - b.base_diff);
       postObj.harmonies = ['base', ...harmonyColProp.map((h) => h.type.replace(/-/g, ' '))];
@@ -280,15 +271,11 @@ const getColorsFromImgId = async (pool, id, getHarmonyCols) => {
         postObj.harmonicDiff = [postObj.harmonicDiff[0]];
         postObj.harmonies = ['base'];
       }
-      console.log(' postObj.harmonicDiff', postObj.harmonicDiff);
-      console.log(' colTempQueries', colTempQueries);
       return Promise.all(colTempQueries);
     }).then((results) => {
       // extract hexcolors from templates
-      console.log('results', results.map((result) => result.rows));
 
       const hexColObj = results.map((result) => result.rows[0]);
-      console.log('hexColObj', hexColObj);
       const hexCol = hexColObj.map((obj) => [obj.hex_color1, obj.hex_color2, obj.hex_color3, obj.hex_color4, obj.hex_color5]);
       postObj.colTemplates = hexCol;
     })
@@ -360,9 +347,6 @@ const indexHandler = async (req, res) => {
   const limitNum = 100;
   const { sort, filter, order } = req.query;
 
-  console.log('sort', sort);
-  console.log('order', order);
-
   const ids = await getIdsAfterSortOrFilter(limitNum, sort, order, filter);
 
   const poolPromises = [];
@@ -394,9 +378,6 @@ const indexColorHandler = async (req, res) => {
   const range = 30;
   const lowerHueBnd = convertToHueBnds(colorPicker - range);
   const upperHueBnd = convertToHueBnds(Number(colorPicker) + range);
-
-  console.log('lowerHueBnd', lowerHueBnd);
-  console.log('upperHueBnd', upperHueBnd);
 
   const colQuery = 'SELECT main_hue, images.id FROM images INNER JOIN base_colors ON images.id = base_colors.image_id WHERE base_colors.main_hue>$1 AND base_colors.main_hue<$2 ORDER BY main_hue ASC';
   const { rows } = await pool.query(colQuery, [lowerHueBnd, upperHueBnd]).catch(handleError);
@@ -467,46 +448,6 @@ const userPosts = async (req, res) => {
     posts, enableDelete: true, url: `user/${id}`, enableExpansion: true, id, username,
   });
 };
-
-const userPostsCatergory = async (req, res) => {
-  const { id } = req.params;
-  const limitNum = 100;
-  const username = await getUsernameFromId(id);
-  const categoryQuery = 'SELECT DISTINCT categories.id, categories.category FROM categories INNER JOIN image_categories ON image_categories.category_id = categories.id INNER JOIN images ON images.id = image_categories.image_id WHERE images.users_id=$1';
-
-  const { rows } = await pool.query(categoryQuery, [id]).catch(handleError);
-
-  const categoriesObj = rows;
-  categoriesObj.forEach((catObj) => catObj.category = captitalizeFirstLetter(catObj.category));
-
-  for (let i = 0; i < categoriesObj.length; i += 1) {
-    const refCatObj = categoriesObj[i];
-    // get all images with that id
-    const catImagesQuery = 'SELECT images.id FROM images INNER JOIN image_categories ON image_categories.image_id = images.id INNER JOIN categories ON image_categories.category_id = categories.id WHERE categories.id=$1';
-    // eslint-disable-next-line no-await-in-loop
-    await pool.query(catImagesQuery, [refCatObj.id]).catch(handleError)
-      .then(
-        (result) => {
-          const imageIds = result.rows.map((row) => row.id);
-          const poolImgPromises = [];
-
-          imageIds.forEach((index) => {
-            poolImgPromises.push(getColorsFromImgId(pool, index, false));
-          });
-          return Promise.all(poolImgPromises);
-        },
-      ).then((result) => {
-        refCatObj.posts = result;
-        console.log('result', result);
-      })
-      .catch(handleError);
-  }
-
-  console.log(categoriesObj);
-  res.render('user-categories', {
-    categoriesObj, enableDelete: true, enableExpansion: true, username, id,
-  });
-};
 const addImgToCategoryObj = async (categoriesObj) => {
   for (let i = 0; i < categoriesObj.length; i += 1) {
     const refCatObj = categoriesObj[i];
@@ -526,12 +467,30 @@ const addImgToCategoryObj = async (categoriesObj) => {
         },
       ).then((result) => {
         refCatObj.posts = result;
-        console.log('result', result);
       })
       .catch(handleError);
   }
   return categoriesObj;
 };
+
+const userPostsCatergory = async (req, res) => {
+  const { id } = req.params;
+  const loggedInUser = req.cookies.userId;
+  console.log('loggedInUser', loggedInUser === id);
+  const limitNum = 100;
+  const username = await getUsernameFromId(id);
+  const categoryQuery = 'SELECT DISTINCT categories.id, categories.category FROM categories INNER JOIN image_categories ON image_categories.category_id = categories.id INNER JOIN images ON images.id = image_categories.image_id WHERE images.users_id=$1';
+
+  const { rows } = await pool.query(categoryQuery, [id]).catch(handleError);
+
+  const categoriesObj = await addImgToCategoryObj(rows);
+
+  console.log(categoriesObj);
+  res.render('user-categories', {
+    categoriesObj, enableDelete: id === loggedInUser, enableExpansion: true, username, id,
+  });
+};
+
 const userFav = () => {};
 
 const indexCategories = async (req, res) => {
@@ -541,75 +500,88 @@ const indexCategories = async (req, res) => {
   const { rows } = await pool.query(categoryQuery).catch(handleError);
 
   const categoriesObj = await addImgToCategoryObj(rows);
-  // categoriesObj.forEach((catObj) => catObj.category = captitalizeFirstLetter(catObj.category));
-
-  // for (let i = 0; i < categoriesObj.length; i += 1) {
-  //   const refCatObj = categoriesObj[i];
-  //   // get all images with that id
-  //   const catImagesQuery = 'SELECT images.id FROM images INNER JOIN image_categories ON image_categories.image_id = images.id INNER JOIN categories ON image_categories.category_id = categories.id WHERE categories.id=$1';
-  //   // eslint-disable-next-line no-await-in-loop
-  //   await pool.query(catImagesQuery, [refCatObj.id]).catch(handleError)
-  //     .then(
-  //       (result) => {
-  //         const imageIds = result.rows.map((row) => row.id);
-  //         const poolImgPromises = [];
-
-  //         imageIds.forEach((index) => {
-  //           poolImgPromises.push(getColorsFromImgId(pool, index, false));
-  //         });
-  //         return Promise.all(poolImgPromises);
-  //       },
-  //     ).then((result) => {
-  //       refCatObj.posts = result;
-  //       console.log('result', result);
-  //     })
-  //     .catch(handleError);
-  // }
 
   console.log('categoriesObj', categoriesObj);
   res.render('index-categories', {
     categoriesObj, enableDelete: false, enableExpansion: true,
   });
 };
-// const usersHandler = async (req, res) => {
-//   const { id } = req.params;
-//   const limitNum = 100;
-//   const username = await getUsernameFromId(id);
-//   const categoryQuery = 'SELECT DISTINCT categories.id, categories.category FROM categories INNER JOIN image_categories ON image_categories.category_id = categories.id INNER JOIN images ON images.id = image_categories.image_id WHERE images.users_id=$1';
 
-//   const { rows } = await pool.query(categoryQuery, [id]).catch(handleError);
+// method for extracting user images
 
-//   const categoriesObj = rows;
-//   categoriesObj.forEach((catObj) => catObj.category = captitalizeFirstLetter(catObj.category));
+const usersHandler = async (req, res) => {
+  const { id } = req.params;
 
-//   for (let i = 0; i < categoriesObj.length; i += 1) {
-//     const refCatObj = categoriesObj[i];
-//     // get all images with that id
-//     const catImagesQuery = 'SELECT images.id FROM images INNER JOIN image_categories ON image_categories.image_id = images.id INNER JOIN categories ON image_categories.category_id = categories.id WHERE categories.id=$1';
-//     // eslint-disable-next-line no-await-in-loop
-//     await pool.query(catImagesQuery, [refCatObj.id]).catch(handleError)
-//       .then(
-//         (result) => {
-//           const imageIds = result.rows.map((row) => row.id);
-//           const poolImgPromises = [];
+  const usersQuery = 'SELECT DISTINCT id, username FROM (SELECT users.id, users.username FROM users INNER JOIN images on users.id =  images.users_id ORDER BY images.created_at DESC) AS userSubQuery';
 
-//           imageIds.forEach((index) => {
-//             poolImgPromises.push(getColorsFromImgId(pool, index, false));
-//           });
-//           return Promise.all(poolImgPromises);
-//         },
-//       ).then((result) => {
-//         refCatObj.posts = result;
-//         console.log('result', result);
-//       })
-//       .catch(handleError);
-//   }
+  const categoriesOfUser = 'SELECT DISTINCT categories.id, categories.category, users_id FROM categories INNER JOIN image_categories ON image_categories.category_id = categories.id INNER JOIN images ON images.id=image_categories.image_id WHERE users_id = $1';
 
-//   console.log(categoriesObj);
-//   res.render('user-categories', {
-//     categoriesObj, enableDelete: true, enableExpansion: true, username, id,
-//   });
-// };
+  const recentPicUser = 'SELECT images.users_id, images.id FROM images WHERE images.users_id = $1 ORDER BY images.created_at DESC LIMIT 3';
+
+  const userObjs = {};
+
+  await pool.query(usersQuery)
+    .then((result) => {
+      const users = result.rows;
+      const userIds = users.map((user) => user.id);
+      users.forEach((user) => {
+        userObjs[user.id] = { username: captitalizeFirstLetter(user.username), id: user.id };
+      });
+
+      const userCatPromises = [];
+      userIds.forEach((userId) => {
+        userCatPromises.push(pool.query(categoriesOfUser, [userId]));
+      });
+      return Promise.all(userCatPromises);
+    }).then((results) => {
+      const userCategories = results.map((result) => result.rows);
+      // find object in userObj where id matches-> add to above object
+      userCategories.forEach((userCategory) => {
+        userCategory.forEach((category) => {
+          const userId = category.users_id;
+          const categoryObj = { categoryId: category.id, category: category.category };
+          if (!('category' in userObjs[userId])) {
+            userObjs[userId].category = [categoryObj];
+          }
+          else {
+            userObjs[userId].category.push(categoryObj);
+          }
+        });
+      });
+      const userPicPool = [];
+      Object.keys(userObjs).forEach((key) => {
+        userPicPool.push(pool.query(recentPicUser, [key]));
+      });
+      return Promise.all(userPicPool);
+    }).then((results) => {
+      const usersPhotoIds = results.map((result) => result.rows);
+      const imgPool = [];
+      usersPhotoIds.forEach((user) => {
+        user.forEach((imgObj) => {
+          const imgId = imgObj.id;
+          imgPool.push(getColorsFromImgId(pool, imgId, false));
+        });
+      });
+      return Promise.all(imgPool);
+    })
+    .then((imgObjs) => {
+      imgObjs.forEach((img) => {
+        const userId = img.userid;
+        if (!('posts' in userObjs[userId])) {
+          userObjs[userId].posts = [img];
+        }
+        else {
+          userObjs[userId].posts.push(img);
+        }
+      });
+    })
+    .catch(handleError);
+  const userArray = Object.keys(userObjs).map((key) => userObjs[key]);
+
+  // res.send(userObjs);
+  res.render('users', { userObjs: userArray, enableDelete: false, enableExpansion: true });
+  // link to index page category or user page
+};
 app.get('/?', indexHandler);
 app.get('/categories', indexCategories);
 app.get('/colorFilter', indexColorHandler);
@@ -630,4 +602,4 @@ app.get('/home', restrictToLoggedIn(pool), home);
 app.get('/user/:id?', userPosts);
 app.get('/usercategories/:id?', userPostsCatergory);
 // app.get('/fav/', restrictToLoggedIn(pool), userFav);
-// app.get('/users/?', usersHandler);
+app.get('/users/?', usersHandler);

@@ -1,46 +1,47 @@
-<%- include('header', {title: `All`}); -%>
+<%- include('header', {title: `Contributors`}); -%>
 <body>
   <%- include('nav', locals.numVisitors); -%>
-  <div class="container-lg  px-0 mt-4">
-    <div class="row col-12 mt-4 mx-auto">
+  <div class="container-lg  px-0 mt-sm-4">
+    <div class="row col-12  mx-auto">
       <div class=" d-flex bd-highlight mb-3">
-        <h1 class="me-auto"><%=username%>'s images </h1>
-        <div class="d-flex align-items-center">
-          <a href="/user/<%=id%>" class="btn btn-success btn-sm">All</a>
-        </div>
+        <!-- <h1 class="me-auto">Contributors </h1> -->
       </div>
       <div class="flex-column
-      d-block 
-      d-sm-inline-block
-      col-12
-      col-sm-3
-      col-lg-2
-      pt-1
-      ">
-        <h4 class='d-none d-sm-block'>Categories</h4>
-          <% categoriesObj.forEach((category)=>{ %>
-          <a class="btn btn-outline-success btn-sm m-1 d-inline-block rounded-pill" href="#category-<%=category.id%>" ><%=category.category%></a>
-          <% }) %>
-      </div>
-
-      <div
-        data-bs-spy="scroll"
-        data-bs-target="#category-bar"
-        data-bs-offset="0"
-        tabindex="0"
-        class="d-sm-inline-block row col-12 col-sm-9 col-lg-10  mx-0 ">
-        <% categoriesObj.forEach((category)=>{ %>
-        <div id="category-<%=category.id%>" class="card-body mt-2 mb-4 pt-sm-3 p-1 p-sm-3 bg-transparent  " style="border: Silver solid 2px; border-radius:20px; " >
-          <h4 class="text-center " ><%=category.category %></h4>
-          <div class="row" >
-            <% category.posts.forEach((post, index)=>{%>
-            <div class=" col-12 col-lg-6 col-xl-4 mb-4 " >
-              <%-include('image-card', post, enableDelete); -%>
-            </div>
+        d-block 
+        d-sm-inline-block
+        col-12
+        col-sm-3
+        col-lg-2
+        pt-1
+        ">
+          <h4 class=' d-sm-block'>Contributors</h4>
+            <% userObjs.forEach((user, index)=>{ %>
+            <a class="btn btn-outline-secondary btn-sm m-1 d-inline-block rounded-pill" href="#user-<%=user.username%>" ><%=user.username%></a>
             <% }) %>
-          </div>
         </div>
-        <% }) %>
+        <div
+          data-bs-spy="scroll"
+          data-bs-target="#category-bar"
+          data-bs-offset="0"
+          tabindex="0"
+          class="d-sm-inline-block row col-12 col-sm-9 col-lg-10  mx-0 ">
+          <% userObjs.forEach((user)=>{ %>
+          <div id="user-<%=user.username%>" class="card-body mt-2 mb-4 pt-sm-3 p-1 p-sm-3 bg-transparent  " style="border: Silver solid 2px; border-radius:20px; " >
+            <div class="d-flex align-items-center mb-2">
+              <a class="btn btn-outline-dark m-1 d-inline-block  me-auto" href="/usercategories/<%=user.id %>"><%=user.username %></a>
+              <% user.category.forEach((category)=>{ %>
+                <a class="btn btn-outline-success btn-sm m-1 d-inline-block rounded-pill" href="/categories#category-<%=category.categoryId%>" ><%=category.category%><a>
+              <%}) %> 
+            </div>
+            <div class="row" >
+              <% user.posts.forEach((post, index)=>{%>
+              <div class=" col-12 col-lg-6 col-xl-4 mb-4 " >
+                <%-include('image-card', post, enableDelete, enableExpansion); -%>
+              </div>
+              <% }) %>
+            </div>
+          </div>
+          <% }) %>
       </div>
     </div>
   </div>
