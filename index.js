@@ -507,20 +507,7 @@ const userPostsCatergory = async (req, res) => {
     categoriesObj, enableDelete: true, enableExpansion: true, username, id,
   });
 };
-
-const userFav = () => {};
-
-const usersHandler = async (req, res) => {
-  const { id } = req.params;
-  const limitNum = 100;
-  const username = await getUsernameFromId(id);
-  const categoryQuery = 'SELECT DISTINCT categories.id, categories.category FROM categories INNER JOIN image_categories ON image_categories.category_id = categories.id INNER JOIN images ON images.id = image_categories.image_id WHERE images.users_id=$1';
-
-  const { rows } = await pool.query(categoryQuery, [id]).catch(handleError);
-
-  const categoriesObj = rows;
-  categoriesObj.forEach((catObj) => catObj.category = captitalizeFirstLetter(catObj.category));
-
+const addImgToCategoryObj = async (categoriesObj) => {
   for (let i = 0; i < categoriesObj.length; i += 1) {
     const refCatObj = categoriesObj[i];
     // get all images with that id
@@ -543,13 +530,88 @@ const usersHandler = async (req, res) => {
       })
       .catch(handleError);
   }
+  return categoriesObj;
+};
+const userFav = () => {};
 
-  console.log(categoriesObj);
-  res.render('user-categories', {
-    categoriesObj, enableDelete: true, enableExpansion: true, username, id,
+const indexCategories = async (req, res) => {
+  const limitNum = 100;
+  const categoryQuery = 'SELECT DISTINCT categories.id, categories.category FROM categories INNER JOIN image_categories ON image_categories.category_id = categories.id INNER JOIN images ON images.id = image_categories.image_id';
+
+  const { rows } = await pool.query(categoryQuery).catch(handleError);
+
+  const categoriesObj = await addImgToCategoryObj(rows);
+  // categoriesObj.forEach((catObj) => catObj.category = captitalizeFirstLetter(catObj.category));
+
+  // for (let i = 0; i < categoriesObj.length; i += 1) {
+  //   const refCatObj = categoriesObj[i];
+  //   // get all images with that id
+  //   const catImagesQuery = 'SELECT images.id FROM images INNER JOIN image_categories ON image_categories.image_id = images.id INNER JOIN categories ON image_categories.category_id = categories.id WHERE categories.id=$1';
+  //   // eslint-disable-next-line no-await-in-loop
+  //   await pool.query(catImagesQuery, [refCatObj.id]).catch(handleError)
+  //     .then(
+  //       (result) => {
+  //         const imageIds = result.rows.map((row) => row.id);
+  //         const poolImgPromises = [];
+
+  //         imageIds.forEach((index) => {
+  //           poolImgPromises.push(getColorsFromImgId(pool, index, false));
+  //         });
+  //         return Promise.all(poolImgPromises);
+  //       },
+  //     ).then((result) => {
+  //       refCatObj.posts = result;
+  //       console.log('result', result);
+  //     })
+  //     .catch(handleError);
+  // }
+
+  console.log('categoriesObj', categoriesObj);
+  res.render('index-categories', {
+    categoriesObj, enableDelete: false, enableExpansion: true,
   });
 };
+// const usersHandler = async (req, res) => {
+//   const { id } = req.params;
+//   const limitNum = 100;
+//   const username = await getUsernameFromId(id);
+//   const categoryQuery = 'SELECT DISTINCT categories.id, categories.category FROM categories INNER JOIN image_categories ON image_categories.category_id = categories.id INNER JOIN images ON images.id = image_categories.image_id WHERE images.users_id=$1';
+
+//   const { rows } = await pool.query(categoryQuery, [id]).catch(handleError);
+
+//   const categoriesObj = rows;
+//   categoriesObj.forEach((catObj) => catObj.category = captitalizeFirstLetter(catObj.category));
+
+//   for (let i = 0; i < categoriesObj.length; i += 1) {
+//     const refCatObj = categoriesObj[i];
+//     // get all images with that id
+//     const catImagesQuery = 'SELECT images.id FROM images INNER JOIN image_categories ON image_categories.image_id = images.id INNER JOIN categories ON image_categories.category_id = categories.id WHERE categories.id=$1';
+//     // eslint-disable-next-line no-await-in-loop
+//     await pool.query(catImagesQuery, [refCatObj.id]).catch(handleError)
+//       .then(
+//         (result) => {
+//           const imageIds = result.rows.map((row) => row.id);
+//           const poolImgPromises = [];
+
+//           imageIds.forEach((index) => {
+//             poolImgPromises.push(getColorsFromImgId(pool, index, false));
+//           });
+//           return Promise.all(poolImgPromises);
+//         },
+//       ).then((result) => {
+//         refCatObj.posts = result;
+//         console.log('result', result);
+//       })
+//       .catch(handleError);
+//   }
+
+//   console.log(categoriesObj);
+//   res.render('user-categories', {
+//     categoriesObj, enableDelete: true, enableExpansion: true, username, id,
+//   });
+// };
 app.get('/?', indexHandler);
+app.get('/categories', indexCategories);
 app.get('/colorFilter', indexColorHandler);
 app.post('/colorFilter', indexColorHandler);
 app.get('/upload', imageUpload);
@@ -568,4 +630,4 @@ app.get('/home', restrictToLoggedIn(pool), home);
 app.get('/user/:id?', userPosts);
 app.get('/usercategories/:id?', userPostsCatergory);
 // app.get('/fav/', restrictToLoggedIn(pool), userFav);
-app.get('/users/?', usersHandler);
+// app.get('/users/?', usersHandler);

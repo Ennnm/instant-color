@@ -1,0 +1,16 @@
+<%- include('header', {title: `All`}); -%>
+
+<body>
+  <%- include('nav', locals.numVisitors); -%>
+  <%-include('front-page-intro');-%>
+  <div class="container-sm" id="index">
+    <div class="row col-12 mt-4 mx-auto">
+      <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+        <a href="/" class="btn btn-outline-secondary btn-sm me-md-2">View all</a>
+      </div>
+    </div>    
+    <div class="row d-flex align-items-baseline mt-2 mt-sm-4 mx-1 mx-sm-4">
+    <%-include('pics-by-categories', {categoriesObj, enableDelete: false, enableExpansion: true}); -%>
+    </div>
+  </div>
+</body>
