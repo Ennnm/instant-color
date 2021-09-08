@@ -33,7 +33,16 @@ app.use(express.static('resource'));
 app.listen(PORT);
 
 let pgConnectionConfigs;
-if (process.env.ENV === 'PRODUCTION') {
+
+if (process.env.DATABASE_URL) {
+  pgConnectionConfigs = {
+    connectionString: process.env.DATABASE_URL,
+    ssl: {
+      rejectUnauthorized: false,
+    },
+  };
+}
+else if (process.env.ENV === 'PRODUCTION') {
   // determine how we connect to the remote Postgres server
   pgConnectionConfigs = {
     user: 'postgres',
