@@ -414,7 +414,7 @@ const acceptLogin = (req, res) => {
     res.cookie('loggedIn', getHash(id));
     res.cookie('userId', id);
     // could redirect to user profile page/ page with all user notes
-    res.redirect('/');
+    res.redirect(`/usercategories/${id}`);
   };
   const sqlQuery = `SELECT * FROM users WHERE username = '${req.body.username}'`;
   pool.query(sqlQuery, whenLogIn);
