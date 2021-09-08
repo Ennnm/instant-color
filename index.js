@@ -6,13 +6,23 @@ import dotenv, { config } from 'dotenv';
 import fs from 'fs';
 import pg from 'pg';
 import multer from 'multer';
+
+// deployment to heroku
+import aws from 'aws-sdk';
+import multerS3 from 'multer-s3';
 import sharp from 'sharp';
 
-import { imgFilePath, resizeAndProcessImg, processImage } from './color.mjs';
+import {
+  imgFilePath, resizeAndProcessImg, resizeAndProcessImgS3, processImage,
+} from './color.mjs';
 import { downloadImg, downloadSmallImg } from './color-mani.mjs';
 import {
   getHash, restrictToLoggedIn, handleError, captitalizeFirstLetter,
 } from './util.mjs';
+
+const S3 = new aws.S3({
+  signatureVersion: 'v4',
+});
 
 dotenv.config({ silent: process.env.NODE_ENV === 'production' });
 
@@ -21,6 +31,10 @@ const app = express();
 const PORT = process.env.PORT || 3004;
 // const PORT = process.argv[2] ? process.argv[2] : 3004;
 
+const s3 = new aws.S3({
+  accessKeyId: process.env.ACCESSKEYID,
+  secretAccessKey: process.env.SECRETACCESSKEY,
+});
 app.use(methodOverride('_method'));
 app.set('view engine', 'ejs');
 app.use(cookieParser());
@@ -64,15 +78,36 @@ else if (process.env.ENV === 'PRODUCTION') {
 const pool = new Pool(pgConnectionConfigs);
 
 const storage = multer.diskStorage({
-  destination(req, file, cb) {
-    cb(null, 'uploads/');
-  },
   filename(req, file, cb) {
     cb(null, `${Date.now()}.jpg`);
   },
 });
+// const storage = multer.diskStorage({
+//   destination(req, file, cb) {
+//     cb(null, 'uploads/');
+//   },
+//   filename(req, file, cb) {
+//     cb(null, `${Date.now()}.jpg`);
+//   },
+// });
+// for local host or aws server deployment
+// const mutlerUpload = multer({ dest: 'uploads/', storage });
+// for aws s3 bucket
+const mutlerUpload = multer({
+  storage: multerS3({
+    s3,
+    bucket: 'buckethueinstant',
+    acl: 'public-read',
+    metadata: (request, file, callback) => {
+      callback(null, { fieldName: file.fieldname });
+    },
+    contentType: multerS3.AUTO_CONTENT_TYPE,
+    key: (request, file, callback) => {
+      callback(null, `${Date.now().toString()}.jpg`);
+    },
+  }),
 
-const mutlerUpload = multer({ dest: 'uploads/', storage });
+});
 
 app.use((request, response, next) => {
   request.isUserLoggedIn = false;
@@ -190,7 +225,6 @@ const getColorsFromImgId = async (pool, id, getHarmonyCols) => {
     })
     .catch((e) => {
       console.error(e); });
-  console.log('postObj', postObj);
   return postObj;
 };
 
@@ -304,25 +338,99 @@ const imageUpload = async (req, res) => {
   }
 };
 
-const acceptUpload = async (req, res) => {
-  const { userId, loggedIn } = req.cookies;
+// const acceptUpload = async (req, res) => {
+//   const { userId, loggedIn } = req.cookies;
+//   let { imgUrl, category } = req.body;
+//   category = captitalizeFirstLetter(category);
+//   if (req.file)
+//   {
+//     const { filename, path, location } = req.file;
+//     console.log('file location', location);
+//     fs.access('./uploads', (error) => {
+//       if (error)
+//       {
+//         fs.mkdirSync('./uploads');
+//       }
+//     });
+//     const filePath = imgFilePath(filename);
+//     resizeAndProcessImg(pool, filename, filePath, category, userId, 500).then((imageId) => {
+//       res.redirect(`/picture/${imageId}`);
+//     }).catch(handleError);
+//   }
+//   else if (imgUrl) {
+//     const filename = `${Date.now()}.jpg`;
+//     const filepath = imgFilePath(filename);
+//     const maxSize = 500;
+
+//     await downloadSmallImg(imgUrl, filepath, maxSize)
+//       .then(() => processImage(pool, filename, category, userId))
+//       .then((imageId) => {
+//         res.redirect(`/picture/${imageId}`);
+//       })
+//       .catch((e) => {
+//         console.error(e);
+//         res.render('upload.ejs', { err: 'Unable to get image from url' });
+//       });
+//   }
+//   else {
+//     res.render('upload.ejs', { err: 'No image uploaded' });
+//   }
+//   // render next page with image and analyze templates
+// };
+
+// S3
+const resizeS3Obj = (BUCKET, filename, originalKey, writeKey, maxSize) => {
+  const format = 'jpg';
+  const quality = 80;
+
+  return S3.getObject({ Bucket: BUCKET, Key: originalKey }).promise()
+    .then((data) => sharp(data.Body)
+      .withoutEnlargement(maxSize == null)
+      .resize(maxSize, maxSize, {
+        fit: sharp.fit.inside,
+        withoutEnlargement: true,
+      })
+      .toFormat(format, { quality })
+      .withMetadata()
+      .toBuffer())
+    .then((buffer) => S3.putObject({
+      Body: buffer,
+      Bucket: BUCKET,
+      ContentType: `image/${format}`,
+      Key: writeKey,
+    }).promise())
+    .then((info) => console.log('success! file info', info))
+    .catch((err) => {
+      if (err.code === 'NoSuchKey') { err.message = 'Image not found.';
+        console.error('error in resizing', err); }
+    });
+};
+const acceptS3Upload = async (req, res) => {
+  const { userId } = req.cookies;
   let { imgUrl, category } = req.body;
   category = captitalizeFirstLetter(category);
   if (req.file)
   {
-    const { filename, path } = req.file;
-    fs.access('./uploads', (error) => {
-      if (error)
-      {
-        fs.mkdirSync('./uploads');
-      }
-    });
-    const filePath = imgFilePath(filename);
-    resizeAndProcessImg(pool, filename, filePath, category, userId, 500).then((imageId) => {
-      res.redirect(`/picture/${imageId}`);
-    }).catch(handleError);
+    const {
+      bucket, key, filename, location,
+    } = req.file;
+    // res.send(req.file);
+    // return;
+    console.log('s3 filelocation', req.file);
+    await resizeS3Obj(bucket, filename, key, key, 500);
+    await processImage(pool, location, category, userId);
+    // fs.access('./uploads', (error) => {
+    //   if (error)
+    //   {
+    //     fs.mkdirSync('./uploads');
+    //   }
+    // });
+    // const filePath = imgFilePath(filename);
+    // resizeAndProcessImgS3(pool, filename, filePath, category, userId, 500).then((imageId) => {
+    //   res.redirect(`/picture/${imageId}`);
+    // }).catch(handleError);
   }
-  else if (imgUrl) {
+  if (imgUrl) {
     const filename = `${Date.now()}.jpg`;
     const filepath = imgFilePath(filename);
     const maxSize = 500;
@@ -618,7 +726,8 @@ app.get('/categories', indexCategories);
 app.get('/colorFilter', indexColorHandler);
 app.post('/colorFilter', indexColorHandler);
 app.get('/upload', imageUpload);
-app.post('/upload', mutlerUpload.single('photo'), acceptUpload);
+app.post('/upload', mutlerUpload.single('photo'), acceptS3Upload);
+// app.post('/upload', mutlerUpload.single('photo'), acceptUpload);
 
 app.get('/signup', signUpForm);
 app.post('/signup', acceptSignUp);

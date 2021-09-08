@@ -191,6 +191,7 @@ const calHarmonyDiff = (refHsl) => {
 };
 export async function getColorTemplates(pool, imageId, filepath, num)
 {
+  console.log('getColorTemplates in filepath', filepath);
   const colors = await ColorThief.getPalette(filepath, num * 2).catch(handleError);
   let hslColors = colors.map((c) => colord(`rgb(${c.join()})`).toHsl());
   hslColors = hslColors.filter((c) => c.l > 20 && c.l < 90).slice(0, num);
@@ -298,7 +299,9 @@ async function insertHarmonyColor(pool, imageId, harmony, harmonyColors, diffFro
 
 export async function processImage(pool, filename, category, userId)
 {
-  const filePath = imgFilePath(filename);
+  // const filePath = imgFilePath(filename);
+  // aws s3
+  const filePath = filename;
   const imageId = await insertImage(pool, filename, category, userId).catch(handleError);
   const hslColors = await getColorTemplates(pool, imageId, filePath, 5).catch(handleError);
 
@@ -323,6 +326,22 @@ export async function processImage(pool, filename, category, userId)
 }
 
 export async function resizeAndProcessImg(pool, filename, filePath, category, userId, maxSize)
+{
+  await sharp(`${filePath}`)
+    .resize(maxSize, maxSize, {
+      fit: sharp.fit.inside,
+      withoutEnlargement: true,
+    })
+    .withMetadata()
+    .toBuffer((err, buffer) => { if (err) {
+      console.log('buffer', buffer); console.error('error with buffer');
+    }
+    fs.writeFile(`${filePath}`, buffer, (e) => { if (e)console.error(e); });
+    });
+
+  return processImage(pool, filename, category, userId).catch(handleError);
+}
+export async function resizeAndProcessImgS3(pool, filename, filePath, category, userId, maxSize)
 {
   await sharp(`${filePath}`)
     .resize(maxSize, maxSize, {

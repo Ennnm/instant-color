@@ -8,3 +8,5 @@ uploads/*
 downloads/*
 
 .env
+
+s3accesskeys
