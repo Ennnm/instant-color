@@ -18,7 +18,8 @@ dotenv.config({ silent: process.env.NODE_ENV === 'production' });
 
 const { Pool } = pg;
 const app = express();
-const PORT = process.argv[2] ? process.argv[2] : 3004;
+const PORT = process.env.PORT || 3004;
+// const PORT = process.argv[2] ? process.argv[2] : 3004;
 
 app.use(methodOverride('_method'));
 app.set('view engine', 'ejs');
