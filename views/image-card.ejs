@@ -31,6 +31,7 @@
   <!-- category -->
   <div class="card-body justify-content-center bg-white">
     <img
+     
       src="../<%= imageSrc %>"
       class="img-fluid"
       alt="target-image"
@@ -39,11 +40,11 @@
     <% harmonies.forEach((h, index)=>{ %>
     <div class="row swatches mt-1 mx-auto ">
       <% colTemplates[index].forEach((color, index2)=>{ %>
-      <div class="swatch" style="background-color: <%=color%>">
+      <div class="swatch" style="background-color: <%=color%>" 
+        onclick= "CopyToClipboard(<%=`${id}${index}${index2}`%>); return false;"
+        id="<%=`${id}${index}${index2}`%>">
         <span
           class="swatch-text"
-          id="<%=`${id}${index}${index2}`%>"
-          onclick= "CopyToClipboard(<%=`${id}${index}${index2}`%>); return false;"
           data-toggle="tooltip" 
           data-placement="bottom"
           title="copy#"><%=color%>

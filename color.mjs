@@ -305,7 +305,6 @@ export async function processImage(pool, filename, category, userId)
   const baseColors = hslColors.base;
 
   const harmonicDiffs = calHarmonyDiff(baseColors);
-  console.log('harmonicDiffs', harmonicDiffs);
   const closestHarmony = harmonicDiffs[0];
   const harmonicDiffObj = {};
   harmonicDiffs.forEach((harmony) => {

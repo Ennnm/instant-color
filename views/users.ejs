@@ -30,7 +30,8 @@
             <div class="d-flex align-items-center mb-2">
               <a class="btn btn-outline-dark m-1 d-inline-block  me-auto" href="/usercategories/<%=user.id %>"><%=user.username %></a>
               <% user.category.forEach((category)=>{ %>
-                <a class="btn btn-outline-success btn-sm m-1 d-inline-block rounded-pill" href="/categories#category-<%=category.categoryId%>" ><%=category.category%><a>
+                <a class="btn btn-outline-success btn-sm m-1 d-inline-block rounded-pill" href="/usercategories/<%=user.id %>#category-<%=category.categoryId%>" ><%=category.category%><a>
+                <!-- <a class="btn btn-outline-success btn-sm m-1 d-inline-block rounded-pill" href="/categories#category-<%=category.categoryId%>" ><%=category.category%><a> -->
               <%}) %> 
             </div>
             <div class="row" >

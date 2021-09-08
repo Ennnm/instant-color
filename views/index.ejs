@@ -1,7 +1,7 @@
 <%- include('header', {title: `All hues`}); -%>
 
 <body>
-  <%- include('nav', locals.numVisitors); -%>
+  <%- include('nav', locals.numVisitors, locals.colorValue); -%>
   <%-include('front-page-intro');-%>
 
   <div class="container-sm" id="index">

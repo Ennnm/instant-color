@@ -2,7 +2,6 @@
   <a class="navbar-brand" href="/" style="color: white">
     <!-- <i class="fas fa-fill-drip rainbow-text" ></i> -->
     <i class="fas fa-broom rainbow-text"></i>
-    
     Instant Hue
   </a>
   <button
@@ -130,6 +129,8 @@
           min="0"
           max="360"
           step="1"
+          value= "<%=locals.colorValue%>";
+          <% console.log('colVal in nav', locals.colorValue) %>
           onchange="setLabelValue()"
         />
         <button
@@ -140,17 +141,5 @@
         </button>
       </form>
     </ul>
-
-    <!-- <form class="form-inline my-2 my-lg-0">
-      <input
-        class="form-control mr-sm-2"
-        type="search"
-        placeholder="Search"
-        aria-label="Search"
-      />
-      <button class="btn btn-outline-success my-2 my-sm-0" type="submit">
-        Search
-      </button>
-    </form> -->
   </div>
 </nav>
