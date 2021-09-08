@@ -417,18 +417,8 @@ const acceptS3Upload = async (req, res) => {
     // res.send(req.file);
     // return;
     console.log('s3 filelocation', req.file);
-    await resizeS3Obj(bucket, filename, key, key, 500);
-    await processImage(pool, location, category, userId);
-    // fs.access('./uploads', (error) => {
-    //   if (error)
-    //   {
-    //     fs.mkdirSync('./uploads');
-    //   }
-    // });
-    // const filePath = imgFilePath(filename);
-    // resizeAndProcessImgS3(pool, filename, filePath, category, userId, 500).then((imageId) => {
-    //   res.redirect(`/picture/${imageId}`);
-    // }).catch(handleError);
+    await resizeS3Obj(bucket, filename, key, key, 500).catch(handleError);
+    await processImage(pool, location, category, userId).then((imageId) => res.redirect(`/picture/${imageId}`)).catch(handleError);
   }
   if (imgUrl) {
     const filename = `${Date.now()}.jpg`;
