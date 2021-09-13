@@ -295,33 +295,43 @@ async function insertHarmonyColor(pool, imageId, harmony, harmonyColors, diffFro
       console.error(error);
     });
 }
+
+const deleteImageFromDb = (pool, imageId, isAWSDeployed = false) => pool.query(`DELETE FROM images WHERE id=${imageId}`).catch((e) => console.log('error in removing from database', e));
+
 // break process image into few parts
-
-export async function processImage(pool, filename, category, userId)
+export async function processImage(pool, filename, category, userId, isAWSDeployed = false)
 {
-  // const filePath = imgFilePath(filename);
-  // aws s3
-  const filePath = filename;
-  const imageId = await insertImage(pool, filename, category, userId).catch(handleError);
-  const hslColors = await getColorTemplates(pool, imageId, filePath, 5).catch(handleError);
+  let imageId;
+  try {
+    const filePath = isAWSDeployed ? filename : imgFilePath(filename);
+    imageId = await insertImage(pool, filename, category, userId);
+    const hslColors = await getColorTemplates(pool, imageId, filePath, 5);
+    // const imageId = await insertImage(pool, filename, category, userId).catch(handleError);
+    // const hslColors = await getColorTemplates(pool, imageId, filePath, 5).catch(handleError);
 
-  const baseColors = hslColors.base;
+    const baseColors = hslColors.base;
 
-  const harmonicDiffs = calHarmonyDiff(baseColors);
-  const closestHarmony = harmonicDiffs[0];
-  const harmonicDiffObj = {};
-  harmonicDiffs.forEach((harmony) => {
-    const harmonyType = harmony.harmony;
-    harmonicDiffObj[harmonyType] = harmony.value;
-  });
+    const harmonicDiffs = calHarmonyDiff(baseColors);
+    const closestHarmony = harmonicDiffs[0];
+    const harmonicDiffObj = {};
+    harmonicDiffs.forEach((harmony) => {
+      const harmonyType = harmony.harmony;
+      harmonicDiffObj[harmonyType] = harmony.value;
+    });
 
-  const harmonyColors = { ...hslColors };
-  delete harmonyColors.base;
-  const insertBaseCol = insertBaseColor(pool, imageId, closestHarmony.harmony, covertHslToHex(baseColors), baseColors[0].h).catch(handleError);
+    const harmonyColors = { ...hslColors };
+    delete harmonyColors.base;
+    const insertBaseCol = insertBaseColor(pool, imageId, closestHarmony.harmony, covertHslToHex(baseColors), baseColors[0].h).catch(handleError);
 
-  const insertHarmonyColors = Object.keys(harmonyColors).map((key) => insertHarmonyColor(pool, imageId, key, covertHslToHex(harmonyColors[key]), harmonicDiffObj[key]));
+    const insertHarmonyColors = Object.keys(harmonyColors).map((key) => insertHarmonyColor(pool, imageId, key, covertHslToHex(harmonyColors[key]), harmonicDiffObj[key]));
 
-  const insertColors = await Promise.all([insertBaseCol, ...insertHarmonyColors]).catch(handleError);
+    const insertColors = await Promise.all([insertBaseCol, ...insertHarmonyColors]);
+    // const insertColors = await Promise.all([insertBaseCol, ...insertHarmonyColors]).catch(handleError);
+  }
+  catch (e) {
+    console.log('error in processing image', e);
+    await deleteImageFromDb(imageId);
+  }
   return imageId;
 }
 

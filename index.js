@@ -29,7 +29,7 @@ dotenv.config({ silent: process.env.NODE_ENV === 'production' });
 const { Pool } = pg;
 const app = express();
 const PORT = process.env.PORT || 3004;
-// const PORT = process.argv[2] ? process.argv[2] : 3004;
+const isDeployedLoacaly = PORT === 3004;
 
 const s3 = new aws.S3({
   accessKeyId: process.env.ACCESSKEYID,
@@ -77,23 +77,19 @@ else if (process.env.ENV === 'PRODUCTION') {
 
 const pool = new Pool(pgConnectionConfigs);
 
+// local storage
 const storage = multer.diskStorage({
+  destination(req, file, cb) {
+    cb(null, 'uploads/');
+  },
   filename(req, file, cb) {
     cb(null, `${Date.now()}.jpg`);
   },
 });
-// const storage = multer.diskStorage({
-//   destination(req, file, cb) {
-//     cb(null, 'uploads/');
-//   },
-//   filename(req, file, cb) {
-//     cb(null, `${Date.now()}.jpg`);
-//   },
-// });
 // for local host or aws server deployment
-// const mutlerUpload = multer({ dest: 'uploads/', storage });
+const mutlerUpload = multer({ dest: 'uploads/', storage });
 // for aws s3 bucket
-const mutlerUpload = multer({
+const mutlerS3Upload = multer({
   storage: multerS3({
     s3,
     bucket: 'buckethueinstant',
@@ -106,7 +102,6 @@ const mutlerUpload = multer({
       callback(null, `${Date.now().toString()}.jpg`);
     },
   }),
-
 });
 
 app.use((request, response, next) => {
@@ -184,7 +179,7 @@ const getColorsFromImgId = async (pool, id, getHarmonyCols) => {
         return;
       }
       postObj.id = id;
-      postObj.imageSrc = result.rows[0].path;
+      postObj.imageSrc = isDeployedLoacaly ? `/${result.rows[0].path}` : result.rows[0].path;
       postObj.userid = result.rows[0].users_id;
       postObj.createdat = result.rows[0].created_at;
       const getBaseColProp = pool.query('SELECT harmonies.type, template_id, main_hue FROM base_colors INNER JOIN harmonies ON closest_harmony = harmonies.id where image_id = $1 ', [id]);
@@ -229,6 +224,7 @@ const getColorsFromImgId = async (pool, id, getHarmonyCols) => {
 };
 
 const addImgToCategoryObj = async (categoriesObj) => {
+  // TODO make into pool request
   // const queries=[];
   for (let i = 0; i < categoriesObj.length; i += 1) {
     const refCatObj = categoriesObj[i];
@@ -320,11 +316,10 @@ const indexCategories = async (req, res) => {
 const imageUpload = async (req, res) => {
   const { userId, loggedIn } = req.cookies;
   console.log('in jpg handler');
-  console.log('request.isUserLoggedIn', req.isUserLoggedIn);
   if (req.isUserLoggedIn === true)
   {
+    // categories from drop down list
     const { rows } = await pool.query(`SELECT category FROM categories INNER JOIN image_categories on categories.id = image_categories.category_id INNER JOIN images ON image_categories.image_id = images.id WHERE images.users_id=${userId}`);
-    // const sqlQuery = ;
     const categories = rows.map((obj) => obj.category);
     res.render('upload', { categories });
   }
@@ -338,48 +333,49 @@ const imageUpload = async (req, res) => {
   }
 };
 
-// const acceptUpload = async (req, res) => {
-//   const { userId, loggedIn } = req.cookies;
-//   let { imgUrl, category } = req.body;
-//   category = captitalizeFirstLetter(category);
-//   if (req.file)
-//   {
-//     const { filename, path, location } = req.file;
-//     console.log('file location', location);
-//     fs.access('./uploads', (error) => {
-//       if (error)
-//       {
-//         fs.mkdirSync('./uploads');
-//       }
-//     });
-//     const filePath = imgFilePath(filename);
-//     resizeAndProcessImg(pool, filename, filePath, category, userId, 500).then((imageId) => {
-//       res.redirect(`/picture/${imageId}`);
-//     }).catch(handleError);
-//   }
-//   else if (imgUrl) {
-//     const filename = `${Date.now()}.jpg`;
-//     const filepath = imgFilePath(filename);
-//     const maxSize = 500;
+const acceptUpload = async (req, res) => {
+  const { userId, loggedIn } = req.cookies;
+  let { imgUrl, category } = req.body;
+  category = captitalizeFirstLetter(category);
+  if (req.file)
+  {
+    const { filename, path, location } = req.file;
+    console.log('file location', location);
+    fs.access('./uploads', (error) => {
+      if (error)
+      {
+        fs.mkdirSync('./uploads');
+      }
+    });
+    const filePath = imgFilePath(filename);
+    resizeAndProcessImg(pool, filename, filePath, category, userId, 500).then((imageId) => {
+      res.redirect(`/picture/${imageId}`);
+    }).catch(handleError);
+  }
+  else if (imgUrl) {
+    const filename = `${Date.now()}.jpg`;
+    const filepath = imgFilePath(filename);
+    const maxSize = 500;
 
-//     await downloadSmallImg(imgUrl, filepath, maxSize)
-//       .then(() => processImage(pool, filename, category, userId))
-//       .then((imageId) => {
-//         res.redirect(`/picture/${imageId}`);
-//       })
-//       .catch((e) => {
-//         console.error(e);
-//         res.render('upload.ejs', { err: 'Unable to get image from url' });
-//       });
-//   }
-//   else {
-//     res.render('upload.ejs', { err: 'No image uploaded' });
-//   }
-//   // render next page with image and analyze templates
-// };
+    await downloadSmallImg(imgUrl, filepath, maxSize)
+      .then(() => processImage(pool, filename, category, userId))
+      .then((imageId) => {
+        res.redirect(`/picture/${imageId}`);
+      })
+      .catch((e) => {
+        console.error(e);
+        res.render('upload.ejs', { err: 'Unable to get image from url' });
+      });
+  }
+  else {
+    res.render('upload.ejs', { err: 'No image uploaded' });
+  }
+  // render next page with image and analyze templates
+};
 
 // S3
 const resizeS3Obj = (BUCKET, filename, originalKey, writeKey, maxSize) => {
+  // TODO search mime type of image
   const format = 'jpg';
   const quality = 80;
 
@@ -409,6 +405,7 @@ const acceptS3Upload = async (req, res) => {
   const { userId } = req.cookies;
   let { imgUrl, category } = req.body;
   category = captitalizeFirstLetter(category);
+  // TODO if processImage has error, convey error to page, DELETE from db record
   if (req.file)
   {
     const {
@@ -418,25 +415,29 @@ const acceptS3Upload = async (req, res) => {
     // return;
     console.log('s3 filelocation', req.file);
     await resizeS3Obj(bucket, filename, key, key, 500).catch(handleError);
-    await processImage(pool, location, category, userId).then((imageId) => res.redirect(`/picture/${imageId}`)).catch(handleError);
+    await processImage(pool, location, category, userId, true).then((imageId) => res.redirect(`/picture/${imageId}`)).catch((e) => {
+      console.log('error in accepting s3 upload', e);
+      res.render('upload-no-img-url.ejs', { err: 'Unable to load this image' });
+    });
   }
-  if (imgUrl) {
-    const filename = `${Date.now()}.jpg`;
-    const filepath = imgFilePath(filename);
-    const maxSize = 500;
+  // if (imgUrl) {
+  //   //TODO
+  //   const filename = `${Date.now()}.jpg`;
+  //   const filepath = imgFilePath(filename);
+  //   const maxSize = 500;
 
-    await downloadSmallImg(imgUrl, filepath, maxSize)
-      .then(() => processImage(pool, filename, category, userId))
-      .then((imageId) => {
-        res.redirect(`/picture/${imageId}`);
-      })
-      .catch((e) => {
-        console.error(e);
-        res.render('upload.ejs', { err: 'Unable to get image from url' });
-      });
-  }
+  //   await downloadSmallImg(imgUrl, filepath, maxSize)
+  //     .then(() => processImage(pool, filename, category, userId))
+  //     .then((imageId) => {
+  //       res.redirect(`/picture/${imageId}`);
+  //     })
+  //     .catch((e) => {
+  //       console.error(e);
+  //       res.render('upload.ejs', { err: 'Unable to get image from url' });
+  //     });
+  // }
   else {
-    res.render('upload.ejs', { err: 'No image uploaded' });
+    res.render('upload-no-img-url.ejs', { err: 'No image uploaded' });
   }
   // render next page with image and analyze templates
 };
@@ -716,7 +717,10 @@ app.get('/categories', indexCategories);
 app.get('/colorFilter', indexColorHandler);
 app.post('/colorFilter', indexColorHandler);
 app.get('/upload', imageUpload);
-app.post('/upload', mutlerUpload.single('photo'), acceptS3Upload);
+// different function for aws deployment and localhost
+app.post('/upload',
+  isDeployedLoacaly ? mutlerUpload.single('photo') : mutlerS3Upload.single('photo'),
+  isDeployedLoacaly ? acceptUpload : acceptS3Upload);
 // app.post('/upload', mutlerUpload.single('photo'), acceptUpload);
 
 app.get('/signup', signUpForm);
