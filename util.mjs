@@ -232,7 +232,8 @@ export const resizeS3Obj = (BUCKET, filename, originalKey, writeKey, maxSize) =>
       ContentType: `image/${format}`,
       Key: writeKey,
     }).promise())
-    .then((info) => console.log('success! file info', info));
+    .then((info) => console.log('success! file info', info))
+    .catch((err) => console.error('error in resizing', err));
 };
 
 export const getUsernameFromId = async (pool, id) => {
@@ -250,6 +251,8 @@ export async function downloadS3SmallImg(url, writeKey, maxSize) {
   const format = 'jpg';
   // resize for both cases not working.
   // url upload not possible yet, need to get url file path from s3
+  // something about permissions
+  // message: 'Missing credentials in config, if using AWS_CONFIG_FILE, set AWS_SDK_LOAD_CONFIG=1' errno: -111,
   const s3Params = {
     Bucket: process.env.AWS_S3_BUCKET_NAME,
     ContentType: `image/${format}`,

@@ -182,7 +182,7 @@ export default function initPostsController(db, pool) {
       });
     }
     if (imgUrl) {
-      // TODO
+      // TODO TO TEST
       const filename = `${Date.now()}.jpg`;
       const filepath = filename;
       const maxSize = 500;
