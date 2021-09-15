@@ -218,7 +218,6 @@ export const resizeS3Obj = (BUCKET, filename, originalKey, writeKey, maxSize) =>
 
   return S3.getObject({ Bucket: BUCKET, Key: originalKey }).promise()
     .then((data) => sharp(data.Body)
-      .withoutEnlargement(maxSize == null)
       .resize(maxSize, maxSize, {
         fit: sharp.fit.inside,
         withoutEnlargement: true,
