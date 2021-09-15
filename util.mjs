@@ -223,7 +223,7 @@ export const resizeS3Obj = (BUCKET, filename, originalKey, writeKey, maxSize) =>
         fit: sharp.fit.inside,
         withoutEnlargement: true,
       })
-      .toFormat(format, { quality })
+      .jpeg({ mozjpeg: true })
       .withMetadata()
       .toBuffer())
     .then((buffer) => S3.putObject({
