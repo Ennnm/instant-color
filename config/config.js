@@ -6,4 +6,12 @@ module.exports = {
     host: '127.0.0.1',
     dialect: 'postgres',
   },
+  production: {
+    username: 'postgres',
+    password: process.env.DB_PASSWORD,
+    database: 'instant_color',
+    host: '127.0.0.1',
+    dialect: 'postgres',
+  },
+
 };
