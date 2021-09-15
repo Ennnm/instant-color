@@ -218,7 +218,7 @@ export const resizeS3Obj = (BUCKET, filename, originalKey, writeKey, maxSize) =>
 
   return S3.getObject({ Bucket: BUCKET, Key: originalKey }).promise()
     .then((data) => sharp(data.Body)
-      .withoutEnlargement(maxSize == null)
+      // .withoutEnlargement(maxSize == null)
       .resize(maxSize, maxSize, {
         fit: sharp.fit.inside,
         withoutEnlargement: true,
@@ -259,6 +259,8 @@ export async function downloadS3SmallImg(url, writeKey, maxSize) {
     Key: writeKey,
   };
   return sharp(buffer)
+    .withoutEnlargement(maxSize == null)
+
     .resize(maxSize, maxSize, {
       fit: sharp.fit.inside,
       withoutEnlargement: true,
