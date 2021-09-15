@@ -2,6 +2,7 @@
 import jssha from 'jssha';
 import dotenv from 'dotenv';
 import sharp from 'sharp';
+import fetch from 'node-fetch';
 
 import { S3 } from './locals.mjs';
 
