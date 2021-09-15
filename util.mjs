@@ -246,3 +246,29 @@ export const getUsernameFromId = async (pool, id) => {
     }).catch(handleError);
   return username;
 };
+
+export async function downloadS3SmallImg(url, writeKey, maxSize) {
+  const response = await fetch(url);
+  const buffer = await response.buffer();
+  const format = 'jpg';
+
+  return sharp(buffer)
+    .resize(maxSize, maxSize, {
+      fit: sharp.fit.inside,
+      withoutEnlargement: true,
+    })
+    .jpeg({ mozjpeg: true })
+    .withMetadata()
+    .toBuffer()
+    .then((rsBuffer) => S3.putObject({
+      Body: rsBuffer,
+      Bucket: process.env.AWS_S3_BUCKET_NAME,
+      ContentType: `image/${format}`,
+      Key: writeKey,
+    }).promise())
+    .then((info) => console.log('success! file info', info))
+    .catch((err) => {
+      if (err.code === 'NoSuchKey') { err.message = 'Image not found.';
+        console.error('error in resizing', err); }
+    });
+}

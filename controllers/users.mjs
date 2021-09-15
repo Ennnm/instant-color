@@ -6,7 +6,6 @@ import {
   addImgToCategoryObj,
   captitalizeFirstLetter,
   getUsernameFromId,
-  restrictToLoggedIn,
 
 } from '../util.mjs';
 

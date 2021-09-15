@@ -2,12 +2,12 @@
   "name": "instant-hue",
   "version": "1.0.0",
   "description": "# base-node-bootcamp",
-  "main": "index.js",
+  "main": "index.mjs",
   "engines": {
     "node": "16.6.2"
   },
   "scripts": {
-    "start": "node index.js",
+    "start": "node index.mjs",
     "test": "node test.js"
   },
   "repository": {

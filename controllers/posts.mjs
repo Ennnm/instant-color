@@ -1,6 +1,6 @@
 // db is an argument to this function so
 // that we can make db queries inside
-import fs from 'fs';
+import fs, { unlinkSync } from 'fs';
 
 import {
   getIdsAfterSortOrFilter,
@@ -10,6 +10,7 @@ import {
   convertToHueBnds,
   captitalizeFirstLetter,
   resizeS3Obj,
+  downloadS3SmallImg,
 } from '../util.mjs';
 import {
   imgFilePath,
@@ -90,12 +91,16 @@ export default function initPostsController(db, pool) {
       {
         console.log('Error when deleting', err.stack);
         res.status(503).send(result);
-        return;
       }
-      res.redirect(`/user/${userId}`);
+      else {
+        console.log('delete returning result', result.rows[0].path);
+        const filePath = isDeployedLocally ? `./uploads/${result.rows[0].path}` : result.rows[0].path;
+        fs.unlink(filePath, (e) => console.log(e));
+        res.redirect(`/user/${userId}`);
+      }
     };
 
-    const sqlQuery = `DELETE FROM images WHERE id = ${id}`;
+    const sqlQuery = `DELETE FROM images WHERE id = ${id} RETURNING *`;
     pool.query(sqlQuery, whenDeleted);
   };
   const createForm = async (req, res) => {
@@ -176,22 +181,22 @@ export default function initPostsController(db, pool) {
         res.render('upload-no-img-url.ejs', { err: 'Unable to load this image' });
       });
     }
-    // if (imgUrl) {
-    //   //TODO
-    //   const filename = `${Date.now()}.jpg`;
-    //   const filepath = imgFilePath(filename);
-    //   const maxSize = 500;
+    if (imgUrl) {
+      // TODO
+      const filename = `${Date.now()}.jpg`;
+      const filepath = filename;
+      const maxSize = 500;
 
-    //   await downloadSmallImg(imgUrl, filepath, maxSize)
-    //     .then(() => processImage(pool, filename, category, userId))
-    //     .then((imageId) => {
-    //       res.redirect(`/picture/${imageId}`);
-    //     })
-    //     .catch((e) => {
-    //       console.error(e);
-    //       res.render('upload.ejs', { err: 'Unable to get image from url' });
-    //     });
-    // }
+      await downloadS3SmallImg(imgUrl, filepath, maxSize)
+        .then(() => processImage(pool, filename, category, userId))
+        .then((imageId) => {
+          res.redirect(`/picture/${imageId}`);
+        })
+        .catch((e) => {
+          console.error(e);
+          res.render('upload.ejs', { err: 'Unable to get image from url' });
+        });
+    }
     else {
       res.render('upload-no-img-url.ejs', { err: 'No image uploaded' });
     }
