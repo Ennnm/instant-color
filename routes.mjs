@@ -46,7 +46,7 @@ export default function bindRoutes(app) {
   const postsController = initPostsController(db, pool);
   const usersController = initUsersController(db, pool);
   // pass in the db for all callbacks
-  console.log('in fsdfsdfs');
+  console.log('in bindRoutes');
   // define your route matchers here using app
   app.get('/?', postsController.index);
   app.get('/categories', postsController.indexCategories);

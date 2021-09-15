@@ -39,3 +39,4 @@ const PORT = process.env.PORT || 3004;
 export const isDeployedLocally = PORT === 3004;
 app.listen(PORT);
 // app.listen(3004);
+console.log('in index.mjs PORT:', PORT);
