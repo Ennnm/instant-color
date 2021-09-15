@@ -232,11 +232,7 @@ export const resizeS3Obj = (BUCKET, filename, originalKey, writeKey, maxSize) =>
       ContentType: `image/${format}`,
       Key: writeKey,
     }).promise())
-    .then((info) => console.log('success! file info', info))
-    .catch((err) => {
-      if (err.code === 'NoSuchKey') { err.message = 'Image not found.';
-        console.error('error in resizing', err); }
-    });
+    .then((info) => console.log('success! file info', info));
 };
 
 export const getUsernameFromId = async (pool, id) => {
@@ -252,7 +248,13 @@ export async function downloadS3SmallImg(url, writeKey, maxSize) {
   const response = await fetch(url);
   const buffer = await response.buffer();
   const format = 'jpg';
-
+  // resize for both cases not working.
+  // url upload not possible yet, need to get url file path from s3
+  const s3Params = {
+    Bucket: process.env.AWS_S3_BUCKET_NAME,
+    ContentType: `image/${format}`,
+    Key: writeKey,
+  };
   return sharp(buffer)
     .resize(maxSize, maxSize, {
       fit: sharp.fit.inside,
@@ -261,15 +263,11 @@ export async function downloadS3SmallImg(url, writeKey, maxSize) {
     .jpeg({ mozjpeg: true })
     .withMetadata()
     .toBuffer()
-    .then((rsBuffer) => S3.putObject({
-      Body: rsBuffer,
-      Bucket: process.env.AWS_S3_BUCKET_NAME,
-      ContentType: `image/${format}`,
-      Key: writeKey,
-    }).promise())
+    .then((rsBuffer) =>
+    {
+      s3Params.Body = rsBuffer;
+      return S3.putObject(s3Params).promise();
+    })
     .then((info) => console.log('success! file info', info))
-    .catch((err) => {
-      if (err.code === 'NoSuchKey') { err.message = 'Image not found.';
-        console.error('error in resizing', err); }
-    });
+    .catch((err) => console.error('error in resizing', err));
 }
