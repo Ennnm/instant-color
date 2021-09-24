@@ -184,11 +184,11 @@ export default function initPostsController(db, pool) {
     if (imgUrl) {
       // TODO TO TEST
       const filename = `${Date.now()}.jpg`;
-      const filepath = filename;
+      const location = `https://${process.env.AWS_S3_BUCKET_NAME}.s3.ap-southeast-1.amazonaws.com/${filename}`,
       const maxSize = 500;
 
-      await downloadS3SmallImg(imgUrl, filepath, maxSize)
-        .then(() => processImage(pool, filename, category, userId, true))
+      await downloadS3SmallImg(imgUrl, filename, maxSize)
+        .then(() => processImage(pool, location, category, userId, true))
         .then((imageId) => {
           res.redirect(`/picture/${imageId}`);
         })
