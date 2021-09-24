@@ -184,7 +184,7 @@ export default function initPostsController(db, pool) {
     if (imgUrl) {
       // TODO TO TEST
       const filename = `${Date.now()}.jpg`;
-      const location = `https://${process.env.AWS_S3_BUCKET_NAME}.s3.ap-southeast-1.amazonaws.com/${filename}`,
+      const location = `https://${process.env.AWS_S3_BUCKET_NAME}.s3.ap-southeast-1.amazonaws.com/${filename}`;
       const maxSize = 500;
 
       await downloadS3SmallImg(imgUrl, filename, maxSize)
