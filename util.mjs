@@ -262,8 +262,7 @@ export async function downloadS3SmallImg(url, writeKey, maxSize) {
     Key: writeKey,
   };
   return sharp(buffer)
-  // .withoutEnlargement(maxSize == null)
-
+    .withoutEnlargement(maxSize == null)
     .resize(maxSize, maxSize, {
       fit: sharp.fit.inside,
       withoutEnlargement: true,
