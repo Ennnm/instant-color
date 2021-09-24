@@ -296,7 +296,7 @@ async function insertHarmonyColor(pool, imageId, harmony, harmonyColors, diffFro
     });
 }
 
-const deleteImageFromDb = (pool, imageId, isAWSDeployed = false) => pool.query(`DELETE FROM images WHERE id=${imageId}`).catch((e) => console.log('error in removing from database', e));
+const deleteImageFromDb = (pool, imageId) => pool.query(`DELETE FROM images WHERE id=${imageId}`).catch((e) => console.log('error in removing from database', e));
 
 // break process image into few parts
 export async function processImage(pool, filename, category, userId, isAWSDeployed = false)
@@ -330,7 +330,7 @@ export async function processImage(pool, filename, category, userId, isAWSDeploy
   }
   catch (e) {
     console.log('error in processing image', e);
-    await deleteImageFromDb(imageId, isAWSDeployed);
+    await deleteImageFromDb(pool, imageId);
   }
   return imageId;
 }
