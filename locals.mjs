@@ -2,10 +2,8 @@ import multer from 'multer';
 import multerS3 from 'multer-s3';
 import aws from 'aws-sdk';
 
-const PORT = process.env.PORT || 3000;
-// const PORT = process.env.PORT || 3004;
-export const isDeployedLocally = false;
-// export const isDeployedLocally = PORT === 3004;
+const PORT = process.env.PORT || 3004;
+export const isDeployedLocally = PORT === 3004;
 
 export const S3 = new aws.S3({
   signatureVersion: 'v4',
