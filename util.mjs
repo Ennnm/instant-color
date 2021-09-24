@@ -218,7 +218,7 @@ export const resizeS3Obj = (BUCKET, filename, originalKey, writeKey, maxSize) =>
 
   return S3.getObject({ Bucket: BUCKET, Key: originalKey }).promise()
     .then((data) => sharp(data.Body)
-    // .withoutEnlargement(maxSize == null)
+      .withoutEnlargement(maxSize == null)
     // some how makes file invalid though successgully uploaded to aws
     // requires ^ to work but it causes other things to break
 
