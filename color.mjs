@@ -11,6 +11,8 @@ import sharp from 'sharp';
 import { resolve } from 'path';
 import { handleError } from './util.mjs';
 
+import { S3 } from './locals.mjs';
+
 extend([harmonies, lchPlugin]);
 
 export const rgbToHex = (r, g, b) => `${[r, g, b].map((x) => {
