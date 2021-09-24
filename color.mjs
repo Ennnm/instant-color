@@ -331,6 +331,7 @@ export async function processImage(pool, filename, category, userId, isAWSDeploy
   catch (e) {
     console.log('error in processing image', e);
     await deleteImageFromDb(pool, imageId);
+    throw Error(e);
   }
   return imageId;
 }
