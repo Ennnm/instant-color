@@ -330,7 +330,7 @@ export async function processImage(pool, filename, category, userId, isAWSDeploy
   }
   catch (e) {
     console.log('error in processing image', e);
-    await deleteImageFromDb(imageId);
+    await deleteImageFromDb(imageId, isAWSDeployed);
   }
   return imageId;
 }
@@ -365,5 +365,5 @@ export async function resizeAndProcessImgS3(pool, filename, filePath, category, 
     fs.writeFile(`${filePath}`, buffer, (e) => { if (e)console.error(e); });
     });
 
-  return processImage(pool, filename, category, userId).catch(handleError);
+  return processImage(pool, filename, category, userId, true).catch(handleError);
 }
