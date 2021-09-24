@@ -218,14 +218,14 @@ export const resizeS3Obj = (BUCKET, filename, originalKey, writeKey, maxSize) =>
 
   return S3.getObject({ Bucket: BUCKET, Key: originalKey }).promise()
     .then((data) => sharp(data.Body)
-      .withoutEnlargement(maxSize == null)
-      // some how makes file invalid though successgully uploaded to aws
-      // requires ^ to work but it causes other things to break
+    // .withoutEnlargement(maxSize == null)
+    // some how makes file invalid though successgully uploaded to aws
+    // requires ^ to work but it causes other things to break
 
-      // .resize(maxSize, maxSize, {
-      //   fit: sharp.fit.inside,
-      //   withoutEnlargement: true,
-      // })
+      .resize(maxSize, maxSize, {
+        fit: sharp.fit.inside,
+        withoutEnlargement: true,
+      })
       .jpeg({ mozjpeg: true })
       .withMetadata()
       .toBuffer())
@@ -264,10 +264,10 @@ export async function downloadS3SmallImg(url, writeKey, maxSize) {
   return sharp(buffer)
     .withoutEnlargement(maxSize == null)
 
-    // .resize(maxSize, maxSize, {
-    //   fit: sharp.fit.inside,
-    //   withoutEnlargement: true,
-    // })
+    .resize(maxSize, maxSize, {
+      fit: sharp.fit.inside,
+      withoutEnlargement: true,
+    })
     .jpeg({ mozjpeg: true })
     .withMetadata()
     .toBuffer()
