@@ -188,7 +188,7 @@ export default function initPostsController(db, pool) {
       const maxSize = 500;
 
       await downloadS3SmallImg(imgUrl, filepath, maxSize)
-        .then(() => processImage(pool, filename, category, userId))
+        .then(() => processImage(pool, filename, category, userId, true))
         .then((imageId) => {
           res.redirect(`/picture/${imageId}`);
         })
