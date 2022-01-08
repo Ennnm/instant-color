@@ -49,7 +49,7 @@ export default function bindRoutes(app) {
   console.log('in bindRoutes');
   // define your route matchers here using app
   app.get('/?', postsController.index);
-  app.get('/categories', postsController.indexCategories);
+  app.get('/categories', postsController.indexCategories);;;;
   app.get('/colorFilter', postsController.indexByColor);
   app.post('/colorFilter', postsController.indexByColor);
   app.get('/upload', postsController.createForm);

@@ -258,7 +258,7 @@ export async function downloadS3SmallImg(url, writeKey, maxSize) {
   // message: 'Missing credentials in config, if using AWS_CONFIG_FILE, set AWS_SDK_LOAD_CONFIG=1' errno: -111,
   const s3Params = {
     Bucket: process.env.AWS_S3_BUCKET_NAME,
-    // ContentType: `image/${format}`,
+    ContentType: `image/${format}`,
     Key: writeKey,
   };
   return sharp(buffer)
@@ -267,7 +267,7 @@ export async function downloadS3SmallImg(url, writeKey, maxSize) {
       fit: sharp.fit.inside,
       withoutEnlargement: true,
     })
-    // .jpeg({ mozjpeg: true })
+    .jpeg({ mozjpeg: true })
     .withMetadata()
     .toBuffer()
     .then((rsBuffer) =>

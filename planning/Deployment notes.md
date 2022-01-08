@@ -21,4 +21,4 @@
 
 ### Questions
 
-- How to delete files from s3 via code
+- How to delete files from s3 via codegit
