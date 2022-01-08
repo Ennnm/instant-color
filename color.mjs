@@ -11,6 +11,8 @@ import sharp from 'sharp';
 import { resolve } from 'path';
 import { handleError } from './util.mjs';
 
+import { S3 } from './locals.mjs';
+
 extend([harmonies, lchPlugin]);
 
 export const rgbToHex = (r, g, b) => `${[r, g, b].map((x) => {
@@ -296,7 +298,7 @@ async function insertHarmonyColor(pool, imageId, harmony, harmonyColors, diffFro
     });
 }
 
-const deleteImageFromDb = (pool, imageId, isAWSDeployed = false) => pool.query(`DELETE FROM images WHERE id=${imageId}`).catch((e) => console.log('error in removing from database', e));
+const deleteImageFromDb = (pool, imageId) => pool.query(`DELETE FROM images WHERE id=${imageId}`).catch((e) => console.log('error in removing from database', e));
 
 // break process image into few parts
 export async function processImage(pool, filename, category, userId, isAWSDeployed = false)
@@ -330,7 +332,8 @@ export async function processImage(pool, filename, category, userId, isAWSDeploy
   }
   catch (e) {
     console.log('error in processing image', e);
-    await deleteImageFromDb(imageId);
+    await deleteImageFromDb(pool, imageId);
+    throw Error(e);
   }
   return imageId;
 }
@@ -365,5 +368,5 @@ export async function resizeAndProcessImgS3(pool, filename, filePath, category, 
     fs.writeFile(`${filePath}`, buffer, (e) => { if (e)console.error(e); });
     });
 
-  return processImage(pool, filename, category, userId).catch(handleError);
+  return processImage(pool, filename, category, userId, true).catch(handleError);
 }

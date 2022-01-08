@@ -1,7 +1,7 @@
+/* eslint-disable max-len */
 import express from 'express';
 import methodOverride from 'method-override';
 import cookieParser from 'cookie-parser';
-import moment from 'moment';
 import dotenv, { config } from 'dotenv';
 import fs from 'fs';
 import pg from 'pg';
@@ -17,7 +17,7 @@ import {
 } from './color.mjs';
 import { downloadImg, downloadSmallImg } from './color-mani.mjs';
 import {
-  getHash, restrictToLoggedIn, handleError, captitalizeFirstLetter,
+  getHash, restrictToLoggedIn, handleError, captitalizeFirstLetter, getIdsAfterSortOrFilter, getColorsFromImgId, addImgToCategoryObj, convertToHueBnds,
 } from './util.mjs';
 
 const S3 = new aws.S3({
@@ -29,7 +29,7 @@ dotenv.config({ silent: process.env.NODE_ENV === 'production' });
 const { Pool } = pg;
 const app = express();
 const PORT = process.env.PORT || 3004;
-const isDeployedLoacaly = PORT === 3004;
+export const isDeployedLocally = PORT === 3004;
 
 const s3 = new aws.S3({
   accessKeyId: process.env.ACCESSKEYID,
@@ -76,13 +76,14 @@ else if (process.env.ENV === 'PRODUCTION') {
 }
 
 const pool = new Pool(pgConnectionConfigs);
-
 // local storage
 const storage = multer.diskStorage({
   destination(req, file, cb) {
     cb(null, 'uploads/');
   },
   filename(req, file, cb) {
+    // wow
+    // hello!!!!! akkirrraaaaaa
     cb(null, `${Date.now()}.jpg`);
   },
 });
@@ -116,169 +117,13 @@ app.use((request, response, next) => {
   }
   next();
 });
-
-const getIdsAfterSortOrFilter = async (limitNum, sort = '', order = '', filter = '', userId = '') =>
-{
-  let ids;
-  let userCondition = '';
-  if (userId !== '')
-  {
-    userCondition = `WHERE images.users_id=${userId}`;
-  }
-
-  if (sort === 'hue' && order === 'DESC')
-  {
-    const hueSort = `SELECT images.id from images INNER JOIN base_colors ON images.id =base_colors.image_id  ${userCondition} ORDER BY base_colors.main_hue DESC  LIMIT $1`;
-
-    const { rows } = await pool.query(hueSort, [limitNum]).catch(handleError);
-    ids = rows.map((obj) => obj.id);
-  }
-  else if (sort === 'hue' && order === 'ASC')
-  {
-    const hueSort = `SELECT images.id from images INNER JOIN base_colors ON images.id =base_colors.image_id ${userCondition} ORDER BY base_colors.main_hue ASC  LIMIT $1`;
-    const { rows } = await pool.query(hueSort, [limitNum]).catch(handleError);
-    ids = rows.map((obj) => obj.id);
-  }
-  else if (sort === 'dateCreated' && order === 'DESC')
-  {
-    const dateSort = `SELECT id FROM images ${userCondition} ORDER BY created_at DESC LIMIT $1`;
-    const { rows } = await pool.query(dateSort, [limitNum]).catch(handleError);
-    ids = rows.map((obj) => obj.id);
-  }
-  else if (sort === 'dateCreated' && order === 'ASC')
-  {
-    const dateSort = `SELECT id FROM images ${userCondition} ORDER BY created_at ASC LIMIT $1`;
-    const { rows } = await pool.query(dateSort, [limitNum]).catch(handleError);
-    ids = rows.map((obj) => obj.id);
-  }
-  else if (filter !== '') {
-    let typeQuery = 'SELECT images.id, harmony_colors.base_diff FROM images INNER JOIN base_colors ON images.id = base_colors.image_id INNER JOIN harmonies ON base_colors.closest_harmony = harmonies.id INNER JOIN harmony_colors ON images.id = harmony_colors.image_id AND base_colors.closest_harmony = harmony_colors.harmony_id WHERE harmonies.type=$1 ORDER BY harmony_colors.base_diff ASC LIMIT $2';
-
-    if (userId !== '')
-    {
-      typeQuery = `SELECT images.id, harmony_colors.base_diff FROM images INNER JOIN base_colors ON images.id = base_colors.image_id INNER JOIN harmonies ON base_colors.closest_harmony = harmonies.id INNER JOIN harmony_colors ON images.id = harmony_colors.image_id AND base_colors.closest_harmony = harmony_colors.harmony_id WHERE harmonies.type=$1 AND ${userCondition} ORDER BY harmony_colors.base_diff ASC LIMIT $2`;
-    }
-    const { rows } = await pool.query(typeQuery, [filter, limitNum]).catch(handleError);
-    ids = rows.map((obj) => obj.id);
-  }
-  else {
-    const selectQuery = `SELECT id FROM images ${userCondition} ORDER BY id DESC LIMIT $1`;
-    const { rows } = await pool.query(selectQuery, [limitNum]).catch(handleError);
-    ids = rows.map((obj) => obj.id);
-  }
-  return ids;
-};
-
-const getColorsFromImgId = async (pool, id, getHarmonyCols) => {
-  const postObj = {};
-  await pool.query('SELECT users_id , path, created_at FROM images WHERE id = $1', [id])
+const getUsernameFromId = async (id) => {
+  let username;
+  await pool.query(`SELECT username FROM users WHERE users.id =${id}`)
     .then((result) => {
-      if (result.rows.length === 0)
-      {
-        postObj.err = 'Picture does not exist';
-        return;
-      }
-      postObj.id = id;
-      postObj.imageSrc = isDeployedLoacaly ? `/${result.rows[0].path}` : result.rows[0].path;
-      postObj.userid = result.rows[0].users_id;
-      postObj.createdat = result.rows[0].created_at;
-      const getBaseColProp = pool.query('SELECT harmonies.type, template_id, main_hue FROM base_colors INNER JOIN harmonies ON closest_harmony = harmonies.id where image_id = $1 ', [id]);
-      const getHamonyColProp = pool.query('SELECT harmonies.type, template_id, base_diff FROM harmony_colors INNER JOIN harmonies ON harmony_id = harmonies.id where image_id =$1', [id]);
-      return Promise.all([getBaseColProp, getHamonyColProp]);
-    }).then((result) => {
-      const baseColProp = result[0].rows[0];
-      postObj.baseHarmony = baseColProp.type.replace(/-/g, ' ');
-      postObj.hue = baseColProp.main_hue;
-
-      const colTempQueries = [];
-      colTempQueries.push(pool.query('SELECT * FROM color_templates WHERE id = $1', [baseColProp.template_id]));
-
-      const harmonyColProp = result[1].rows;
-      // get closest and furthest in order
-      harmonyColProp.sort((a, b) => a.base_diff - b.base_diff);
-      postObj.harmonies = ['base', ...harmonyColProp.map((h) => h.type.replace(/-/g, ' '))];
-      postObj.harmonicDiff = harmonyColProp.map((h) => h.base_diff);
-
-      if (getHarmonyCols)
-      {
-        postObj.harmonicDiff = [0, ...postObj.harmonicDiff];
-        harmonyColProp.forEach((h) => {
-          colTempQueries.push(pool.query('SELECT * FROM color_templates WHERE id = $1', [h.template_id]));
-        });
-      }
-      else {
-        postObj.harmonicDiff = [postObj.harmonicDiff[0]];
-        postObj.harmonies = ['base'];
-      }
-      return Promise.all(colTempQueries);
-    }).then((results) => {
-      // extract hexcolors from templates
-
-      const hexColObj = results.map((result) => result.rows[0]);
-      const hexCol = hexColObj.map((obj) => [obj.hex_color1, obj.hex_color2, obj.hex_color3, obj.hex_color4, obj.hex_color5]);
-      postObj.colTemplates = hexCol;
-    })
-    .catch((e) => {
-      console.error(e); });
-  return postObj;
-};
-
-const addImgToCategoryObj = async (categoriesObj) => {
-  // TODO make into pool request
-  // const queries=[];
-  for (let i = 0; i < categoriesObj.length; i += 1) {
-    const refCatObj = categoriesObj[i];
-    // get all images with that id
-    const catImagesQuery = 'SELECT images.id FROM images INNER JOIN image_categories ON image_categories.image_id = images.id INNER JOIN categories ON image_categories.category_id = categories.id WHERE categories.id=$1';
-    // eslint-disable-next-line no-await-in-loop
-    // queries.push( pool.query(catImagesQuery, [refCatObj.id]).catch(handleError))
-    // const sqlQuery = pool.query(catImagesQuery, [refCatObj.id]).catch(handleError)
-    //   .then(
-    //     (result) => {
-    //       const imageIds = result.rows.map((row) => row.id);
-    //       const poolImgPromises = [];
-
-    //       imageIds.forEach((index) => {
-    //         poolImgPromises.push(getColorsFromImgId(pool, index, false));
-    //       });
-    //       return Promise.all(poolImgPromises);
-    //     },
-    //   ).then((result) => {
-    //     refCatObj.posts = result;
-    //   })
-    //   .catch(handleError);
-    // eslint-disable-next-line no-await-in-loop
-    await pool.query(catImagesQuery, [refCatObj.id]).catch(handleError)
-      .then(
-        (result) => {
-          const imageIds = result.rows.map((row) => row.id);
-          const poolImgPromises = [];
-
-          imageIds.forEach((index) => {
-            poolImgPromises.push(getColorsFromImgId(pool, index, false));
-          });
-          return Promise.all(poolImgPromises);
-        },
-      ).then((result) => {
-        refCatObj.posts = result;
-      })
-      .catch(handleError);
-  }
-  // Promise.all(queries)
-  return categoriesObj;
-};
-
-const convertToHueBnds = (value) => {
-  let hueValue = value;
-  if (value > 360)
-  {
-    hueValue = value - 360;
-  }
-  if (value < 0)
-  {
-    hueValue = value + 360;
-  }
-  return hueValue;
+      username = captitalizeFirstLetter(result.rows[0].username);
+    }).catch(handleError);
+  return username;
 };
 
 // ============== ROUTES =========================
@@ -287,11 +132,11 @@ const indexHandler = async (req, res) => {
   const limitNum = 100;
   const { sort, filter, order } = req.query;
 
-  const ids = await getIdsAfterSortOrFilter(limitNum, sort, order, filter);
+  const ids = await getIdsAfterSortOrFilter(pool, limitNum, sort, order, filter);
 
   const poolPromises = [];
   ids.forEach((id) => {
-    poolPromises.push(getColorsFromImgId(pool, id, false));
+    poolPromises.push(getColorsFromImgId(pool, id, false, isDeployedLocally));
   });
 
   const posts = await Promise.all(poolPromises).catch(handleError);
@@ -306,7 +151,7 @@ const indexCategories = async (req, res) => {
 
   const { rows } = await pool.query(categoryQuery).catch(handleError);
 
-  const categoriesObj = await addImgToCategoryObj(rows);
+  const categoriesObj = await addImgToCategoryObj(pool, rows);
 
   console.log('categoriesObj', categoriesObj);
   res.render('index-categories', {
@@ -537,7 +382,7 @@ const logUserOut = (req, res) => {
 
 const renderPic = async (req, res) => {
   const { id } = req.params;
-  const postObj = await getColorsFromImgId(pool, id, true).catch(handleError);
+  const postObj = await getColorsFromImgId(pool, id, true, isDeployedLocally).catch(handleError);
 
   res.render('post', { ...postObj, imagePath: 'test/' });
 };
@@ -558,7 +403,7 @@ const indexColorHandler = async (req, res) => {
 
   const poolPromises = [];
   ids.forEach((id) => {
-    poolPromises.push(getColorsFromImgId(pool, id, false));
+    poolPromises.push(getColorsFromImgId(pool, id, false, isDeployedLocally));
   });
   const posts = await Promise.all(poolPromises).catch(handleError);
   res.render('index', {
@@ -594,26 +439,17 @@ const home = (req, res) => {
   }
 };
 
-const getUsernameFromId = async (id) => {
-  let username;
-  await pool.query(`SELECT username FROM users WHERE users.id =${id}`)
-    .then((result) => {
-      username = captitalizeFirstLetter(result.rows[0].username);
-    }).catch(handleError);
-  return username;
-};
-
 const userPosts = async (req, res) => {
   const { id } = req.params;
   const { sort, filter, order } = req.query;
   const limitNum = 100;
   const username = await getUsernameFromId(id);
 
-  const ids = await getIdsAfterSortOrFilter(limitNum, sort, order, filter, id);
+  const ids = await getIdsAfterSortOrFilter(pool, limitNum, sort, order, filter, id);
 
   const poolPromises = [];
   ids.forEach((index) => {
-    poolPromises.push(getColorsFromImgId(pool, index, false));
+    poolPromises.push(getColorsFromImgId(pool, index, false, isDeployedLocally));
   });
 
   const posts = await Promise.all(poolPromises).catch(handleError);
@@ -633,7 +469,7 @@ const userPostsCatergory = async (req, res) => {
 
   const { rows } = await pool.query(categoryQuery, [id]).catch(handleError);
 
-  const categoriesObj = await addImgToCategoryObj(rows);
+  const categoriesObj = await addImgToCategoryObj(pool, rows);
 
   console.log(categoriesObj);
   res.render('user-categories', {
@@ -689,7 +525,7 @@ const usersHandler = async (req, res) => {
       usersPhotoIds.forEach((user) => {
         user.forEach((imgObj) => {
           const imgId = imgObj.id;
-          imgPool.push(getColorsFromImgId(pool, imgId, false));
+          imgPool.push(getColorsFromImgId(pool, imgId, false, isDeployedLocally));
         });
       });
       return Promise.all(imgPool);
@@ -719,8 +555,8 @@ app.post('/colorFilter', indexColorHandler);
 app.get('/upload', imageUpload);
 // different function for aws deployment and localhost
 app.post('/upload',
-  isDeployedLoacaly ? mutlerUpload.single('photo') : mutlerS3Upload.single('photo'),
-  isDeployedLoacaly ? acceptUpload : acceptS3Upload);
+  isDeployedLocally ? mutlerUpload.single('photo') : mutlerS3Upload.single('photo'),
+  isDeployedLocally ? acceptUpload : acceptS3Upload);
 // app.post('/upload', mutlerUpload.single('photo'), acceptUpload);
 
 app.get('/signup', signUpForm);
