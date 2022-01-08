@@ -12,7 +12,7 @@
 
 ![analysed image and their harmonies](/images/analysed-image.JPG)
 
-[ Video demo](https://youtu.be/NIasKvvgMTE
+[ Video demo](https://youtu.be/NIasKvvgMTE)
 
 <p align="right">(<a href="#top">back to top</a>)</p>
 
@@ -27,9 +27,14 @@
 - [Express](https://expressjs.com/)
 - [Sequelize/PostgreSQL](https://sequelize.org/v7/)
 
-##### Bidirectional communication for multiplayer mode
+##### Extracting dominant colors
 
-- [Socket.IO](https://firebase.google.com/docs/functions)
+- [Color Thief](https://lokeshdhakar.com/projects/color-thief/)
+
+##### File upload and storage
+
+- [Multer](https://www.npmjs.com/package/multer)
+- [AWS S3](https://aws.amazon.com/s3/)
 
 ##### Styling
 
@@ -46,7 +51,7 @@
 
 ## Roadmap
 
-- [] Deployment with S3 image upload
+- [] Deployment with S3 image upload after migrating to mvc framework
 
 See the [open issues](https://github.com/ennnm/succinct_cut/issues) for a full list of proposed features (and known issues).
 
