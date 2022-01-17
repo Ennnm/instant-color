@@ -4,15 +4,44 @@
 
 ##### Generating color combinations from images you love based on color harmony.
 
+![front page screenshot](/images/category-ss.png)
+
 <!-- ABOUT THE PROJECT -->
 
 ## About The Project
 
-![front page screenshot](/images/frontpage-ss.JPG)
+Instant Hue is an app for studying color and for generating color templates from image uploads
 
-![analysed image and their harmonies](/images/analysed-image.JPG)
+**It will:**
+
+1. Analyze your photos for its dominant colors.
+2. Match the photo to its closest color harmony type.
+3. Show color palettes in other color schemes for further inspiration.
+
+**It allows:**
+
+1. Jpg uploads by url and file upload.
+2. Categorization into groups.
+3. Viewing by categories.
+4. Sorting by Hue, time uploaded.
+5. Filtering by color.
+6. Copying of Hex color codes by clicking on the circular palette.
+
+
+
+Color harmony types include analogous, complementary, double-split-complementary, rectangle, split-complementary, tetradic, and triadic. These are ranked from closest to furthest in similarity to the original colors of the image upload
+
+![analysed image and their harmonies](/images/analysed-ss.png)
+
+Copying of hex color code
+
+![copying hexcode from color palette](/images/copy-ss.png)
+
+
 
 [ Video demo](https://youtu.be/NIasKvvgMTE)
+
+You can find the deployed app [here](https://powerful-dawn-80481.herokuapp.com/).
 
 <p align="right">(<a href="#top">back to top</a>)</p>
 
@@ -65,19 +94,4 @@ Jia En - [@ennnm\_](https://twitter.com/ennnm_) - jiaen.1sc4@gmail.com
 
 <p align="right">(<a href="#top">back to top</a>)</p>
 
-<!-- MARKDOWN LINKS & IMAGES -->
-<!-- https://www.markdownguide.org/basic-syntax/#reference-style-links -->
 
-[contributors-shield]: https://img.shields.io/github/contributors/github_username/repo_name.svg?style=for-the-badge
-[contributors-url]: https://github.com/github_username/repo_name/graphs/contributors
-[forks-shield]: https://img.shields.io/github/forks/github_username/repo_name.svg?style=for-the-badge
-[forks-url]: https://github.com/github_username/repo_name/network/members
-[stars-shield]: https://img.shields.io/github/stars/github_username/repo_name.svg?style=for-the-badge
-[stars-url]: https://github.com/github_username/repo_name/stargazers
-[issues-shield]: https://img.shields.io/github/issues/github_username/repo_name.svg?style=for-the-badge
-[issues-url]: https://github.com/github_username/repo_name/issues
-[license-shield]: https://img.shields.io/github/license/github_username/repo_name.svg?style=for-the-badge
-[license-url]: https://github.com/github_username/repo_name/blob/master/LICENSE.txt
-[linkedin-shield]: https://img.shields.io/badge/-LinkedIn-black.svg?style=for-the-badge&logo=linkedin&colorB=555
-[linkedin-url]: https://linkedin.com/in/linkedin_username
-[product-screenshot]: images/screenshot.png
