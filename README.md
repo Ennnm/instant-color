@@ -33,6 +33,10 @@ Color harmony types include analogous, complementary, double-split-complementary
 
 ![analysed image and their harmonies](/images/analysed-ss.png)
 
+Copying of hex color code
+
+![copying hexcode from color palette](/images/copy-ss.png)
+
 
 
 [ Video demo](https://youtu.be/NIasKvvgMTE)
