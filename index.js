@@ -93,7 +93,7 @@ const mutlerS3Upload = multer({
   storage: multerS3({
     s3,
     bucket: 'buckethueinstant',
-    // acl: 'public-read',
+    acl: 'public-read',
     metadata: (request, file, callback) => {
       callback(null, { fieldName: file.fieldname });
     },
