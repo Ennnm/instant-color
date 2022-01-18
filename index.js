@@ -32,7 +32,6 @@ const PORT = process.env.PORT || 3004;
 export const isDeployedLocally = PORT === 3004;
 
 const s3 = new aws.S3({
-  region: process.env.AWS_REGION,
   accessKeyId: process.env.ACCESSKEYID,
   secretAccessKey: process.env.SECRETACCESSKEY,
 });
