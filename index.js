@@ -32,6 +32,7 @@ const PORT = process.env.PORT || 3004;
 export const isDeployedLocally = PORT === 3004;
 
 const s3 = new aws.S3({
+  region: process.env.AWS_REGION,
   accessKeyId: process.env.ACCESSKEYID,
   secretAccessKey: process.env.SECRETACCESSKEY,
 });
@@ -82,8 +83,6 @@ const storage = multer.diskStorage({
     cb(null, 'uploads/');
   },
   filename(req, file, cb) {
-    // wow
-    // hello!!!!! akkirrraaaaaa
     cb(null, `${Date.now()}.jpg`);
   },
 });
@@ -94,7 +93,7 @@ const mutlerS3Upload = multer({
   storage: multerS3({
     s3,
     bucket: 'buckethueinstant',
-    acl: 'public-read',
+    // acl: 'public-read',
     metadata: (request, file, callback) => {
       callback(null, { fieldName: file.fieldname });
     },
@@ -179,6 +178,7 @@ const imageUpload = async (req, res) => {
 };
 
 const acceptUpload = async (req, res) => {
+  console.log('in acceptUpload');
   const { userId, loggedIn } = req.cookies;
   let { imgUrl, category } = req.body;
   category = captitalizeFirstLetter(category);
@@ -247,6 +247,7 @@ const resizeS3Obj = (BUCKET, filename, originalKey, writeKey, maxSize) => {
     });
 };
 const acceptS3Upload = async (req, res) => {
+  console.log('acceptS3Upload req', req);
   const { userId } = req.cookies;
   let { imgUrl, category } = req.body;
   category = captitalizeFirstLetter(category);
@@ -548,6 +549,7 @@ const usersHandler = async (req, res) => {
   res.render('users', { userObjs: userArray, enableDelete: false, enableExpansion: true });
   // link to index page category or user page
 };
+
 app.get('/?', indexHandler);
 app.get('/categories', indexCategories);
 app.get('/colorFilter', indexColorHandler);

@@ -194,6 +194,11 @@ const calHarmonyDiff = (refHsl) => {
 export async function getColorTemplates(pool, imageId, filepath, num)
 {
   console.log('getColorTemplates in filepath', filepath);
+  // const img = new Image();
+
+  // img.addEventListener('load', () => {
+
+  // });
   const colors = await ColorThief.getPalette(filepath, num * 2).catch(handleError);
   let hslColors = colors.map((c) => colord(`rgb(${c.join()})`).toHsl());
   hslColors = hslColors.filter((c) => c.l > 20 && c.l < 90).slice(0, num);
