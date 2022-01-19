@@ -170,6 +170,7 @@ export default function initUsersControler(db, pool) {
             else {
               userObjs[userId].category.push(categoryObj);
             }
+            console.log('categoryObj :>> ', categoryObj);
           });
         });
         const userPicPool = [];

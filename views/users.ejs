@@ -29,10 +29,13 @@
           <div id="user-<%=user.username%>" class="card-body mt-2 mb-4 pt-sm-3 p-1 p-sm-3 bg-transparent  " style="border: Silver solid 2px; border-radius:20px; " >
             <div class="d-flex align-items-center mb-2">
               <a class="btn btn-outline-dark m-1 d-inline-block  me-auto" href="/usercategories/<%=user.id %>"><%=user.username %></a>
+              <% if ('category' in user){ %>
               <% user.category.forEach((category)=>{ %>
                 <a class="btn btn-outline-success btn-sm m-1 d-inline-block rounded-pill" href="/usercategories/<%=user.id %>#category-<%=category.categoryId%>" ><%=category.category%><a>
                 <!-- <a class="btn btn-outline-success btn-sm m-1 d-inline-block rounded-pill" href="/categories#category-<%=category.categoryId%>" ><%=category.category%><a> -->
               <%}) %> 
+              <%} %> 
+          
             </div>
             <div class="row" >
               <% user.posts.forEach((post, index)=>{%>
