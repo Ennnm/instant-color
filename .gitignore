@@ -4,8 +4,11 @@
 # Dependency directories
 node_modules/
 
-*
-*/uploads
+
+uploads/*
+
+!uploads/.gitkeep
+
 downloads/*
 
 .env
