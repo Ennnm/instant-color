@@ -33,7 +33,7 @@ Color harmony types include analogous, complementary, double-split-complementary
 
 ![analysed image and their harmonies](/images/analysed-ss.png)
 
-Copying of hex color code
+Copying the hex color code
 
 ![copying hexcode from color palette](/images/copy-ss.png)
 
@@ -123,7 +123,7 @@ This is an example of how to list things you need to use the software and how to
 
 ## Roadmap
 
-- [] Deployment with S3 image upload after migrating to mvc framework
+- [x] Deployment with S3 image upload after migrating to mvc framework
 
 See the [open issues](https://github.com/ennnm/succinct_cut/issues) for a full list of proposed features (and known issues).
 
@@ -136,5 +136,4 @@ See the [open issues](https://github.com/ennnm/succinct_cut/issues) for a full l
 Jia En - [@ennnm\_](https://twitter.com/ennnm_) - jiaen.1sc4@gmail.com
 
 <p align="right">(<a href="#top">back to top</a>)</p>
-
 
