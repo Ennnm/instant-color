@@ -1,4 +1,3 @@
-
 import {
   getHash,
   getIdsAfterSortOrFilter,
@@ -104,7 +103,7 @@ export default function initUsersControler(db, pool) {
     const { sort, filter, order } = req.query;
     const limitNum = 100;
     const username = await getUsernameFromId(pool, id);
-
+    console.log('req.params :>> ', req.params);
     const ids = await getIdsAfterSortOrFilter(pool, limitNum, sort, order, filter, id);
 
     const poolPromises = [];

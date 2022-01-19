@@ -4,7 +4,7 @@ import dotenv from 'dotenv';
 import sharp from 'sharp';
 import fetch from 'node-fetch';
 
-import { S3 } from './locals.mjs';
+import { S3, uploadFile, getSignedUrl } from './locals.mjs';
 
 const { SALT } = process.env;
 
@@ -93,7 +93,10 @@ export const getIdsAfterSortOrFilter = async (pool, limitNum, sort = '', order =
   }
   else {
     const selectQuery = `SELECT id FROM images ${userCondition} ORDER BY id DESC LIMIT $1`;
+    console.log('selectQuery :>> ', selectQuery);
+    console.log('limitNum :>> ', limitNum);
     const { rows } = await pool.query(selectQuery, [limitNum]).catch(handleError);
+    console.log('rows :>> ', rows);
     ids = rows.map((obj) => obj.id);
   }
   return ids;
@@ -252,6 +255,7 @@ export async function downloadS3SmallImg(url, writeKey, maxSize) {
   const response = await fetch(url);
   const buffer = await response.buffer();
   const format = 'jpg';
+  console.log('in downloadS3SmallImg');
   // resize for both cases not working.
   // url upload not possible yet, need to get url file path from s3
   // something about permissions

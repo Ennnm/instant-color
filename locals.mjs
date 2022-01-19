@@ -10,7 +10,7 @@ const unlinkFile = util.promisify(fs.unlink);
 dotenv.config({ silent: process.env.NODE_ENV === 'production' });
 
 const PORT = process.env.PORT || 3004;
-export const isDeployedLocally = PORT === 3004;
+export const isDeployedLocally = PORT !== 3004;
 
 export const S3 = new aws.S3({
   signatureVersion: 'v4',
@@ -30,8 +30,6 @@ const storage = multer.diskStorage({
     cb(null, 'uploads/');
   },
   filename(req, file, cb) {
-    // wow
-    // hello!!!!! akkirrraaaaaa
     cb(null, `${Date.now()}.jpg`);
   },
 });
@@ -65,6 +63,7 @@ export const uploadFile = (file) => {
   return s3.upload(uploadParams).promise();
 };
 
+// for reading file stream from url
 export const getFileStream = (fileKey) => {
   const downloadParams = {
     Key: fileKey,
@@ -73,7 +72,7 @@ export const getFileStream = (fileKey) => {
 
   return s3.getObject(downloadParams).createReadStream();
 };
-
+// for accessing jpg file directly that color thief requires
 export const getSignedUrl = (key) => {
   const signedUrl = s3.getSignedUrl('getObject', {
     Key: key,

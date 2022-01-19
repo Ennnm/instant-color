@@ -57,35 +57,27 @@ export default function bindRoutes(app) {
   app.post('/colorFilter', postsController.indexByColor);
   app.get('/upload', postsController.createForm);
   // different function for aws deployment and localhost
-  // app.post('/upload',
-  //   isDeployedLocally ? mutlerUpload.single('photo') : mutlerS3Upload.single('photo'),
-  //   isDeployedLocally ? postsController.create : postsController.createS3);
   app.post('/upload',
     mutlerUpload.single('photo'),
-
-    // async (req, res, next) => {
-    //   // const { file } = req;
-    //   // console.log(file);
-    //   // const result = await uploadFile(file);
-    //   // console.log('result :>> ', result);
-    //   // const { description } = req.body;
-    //   // console.log('description :>> ', description);
-    //   // get from s3 if visiting this path
-    //   // res.send({ imagePath: `/images/${result.key}` });
-    //   // res.send('👌');
-    //   next();
-    //   // res.send(result);
-    // }, 
-    postsController.createS3);
+    isDeployedLocally ? postsController.create : postsController.createS3);
   // app.post('/upload',
-  //   isDeployedLocally ? mutlerUpload.single('photo') : mutlerS3Upload.single('photo'),
-  //   isDeployedLocally ? acceptUpload : acceptS3Upload);
+  //   mutlerUpload.single('photo'),
+  //   postsController.createS3);
+
   app.get('/images/:key', (req, res) => {
     const { key } = req.params;
     const readStream = getFileStream(key);
 
     readStream.pipe(res);
   });
+  app.get('/:path/images/:key', (req, res) => {
+    const { path, key } = req.params;
+    console.log('extended path for image', path);
+    const readStream = getFileStream(key);
+
+    readStream.pipe(res);
+  });
+
   app.get('/signup', usersController.create);
   app.post('/signup', usersController.createForm);
   app.get('/login', usersController.login);

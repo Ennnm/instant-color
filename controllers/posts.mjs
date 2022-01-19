@@ -172,11 +172,8 @@ export default function initPostsController(db, pool) {
     await unlinkFile(file.path);
     console.log('result :>> ', result);
     const { description } = req.body;
-    console.log('description :>> ', description);
     console.log('in createS3');
     console.log('getSignedUrl(result.key) :>> ', getSignedUrl(result.key));
-    // console.log('req.file :>> ', req.file);
-    // console.log('req.body.description :>> ', req.body.description);
     const { userId } = req.cookies;
     let { imgUrl, category } = req.body;
     category = captitalizeFirstLetter(category);
