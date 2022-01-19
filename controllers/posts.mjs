@@ -1,6 +1,7 @@
 // db is an argument to this function so
 // that we can make db queries inside
-import fs, { unlinkSync } from 'fs';
+import fs from 'fs';
+import util from 'util';
 
 import {
   getIdsAfterSortOrFilter,
@@ -20,7 +21,9 @@ import {
 import {
   downloadSmallImg,
 } from '../color-mani.mjs';
-import { isDeployedLocally } from '../locals.mjs';
+import { isDeployedLocally, uploadFile, getSignedUrl } from '../locals.mjs';
+
+const unlinkFile = util.promisify(fs.unlink);
 
 export default function initPostsController(db, pool) {
   const index = async (req, res) => {
@@ -105,7 +108,7 @@ export default function initPostsController(db, pool) {
   };
   const createForm = async (req, res) => {
     const { userId, loggedIn } = req.cookies;
-    console.log('in jpg handler');
+    console.log('in createform handler');
     if (req.isUserLoggedIn === true)
     {
     // categories from drop down list
@@ -163,19 +166,31 @@ export default function initPostsController(db, pool) {
   };
 
   const createS3 = async (req, res) => {
+    const { file } = req;
+    console.log(file);
+    const result = await uploadFile(file);
+    await unlinkFile(file.path);
+    console.log('result :>> ', result);
+    const { description } = req.body;
+    console.log('description :>> ', description);
+    console.log('in createS3');
+    console.log('getSignedUrl(result.key) :>> ', getSignedUrl(result.key));
+    // console.log('req.file :>> ', req.file);
+    // console.log('req.body.description :>> ', req.body.description);
     const { userId } = req.cookies;
     let { imgUrl, category } = req.body;
     category = captitalizeFirstLetter(category);
     // TODO if processImage has error, convey error to page, DELETE from db record
     if (req.file)
     {
-      const {
-        bucket, key, filename, location,
-      } = req.file;
-      // res.send(req.file);
-      // return;
-      console.log('s3 filelocation', req.file);
-      await resizeS3Obj(bucket, filename, key, key, 500).catch(handleError);
+      const location = getSignedUrl(result.key);
+      // const {
+      //   bucket, key, filename, location,
+      // } = req.file;
+      // // res.send(req.file);
+      // // return;
+      // console.log('s3 filelocation', req.file);
+      // await resizeS3Obj(bucket, filename, key, key, 500).catch(handleError);
       await processImage(pool, location, category, userId, true).then((imageId) => res.redirect(`/picture/${imageId}`)).catch((e) => {
         console.log('error in accepting s3 upload', e);
         res.render('upload-no-img-url.ejs', { err: 'Unable to load this image' });

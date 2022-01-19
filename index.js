@@ -29,10 +29,14 @@ dotenv.config({ silent: process.env.NODE_ENV === 'production' });
 const { Pool } = pg;
 const app = express();
 const PORT = process.env.PORT || 3004;
-export const isDeployedLocally = PORT === 3004;
+const isDeployedLocally = PORT !== 3004;
 
 const s3 = new aws.S3({
+<<<<<<< Updated upstream
   region: process.env.AWS_REGION,
+=======
+  // region: process.env.AWS_REGION,
+>>>>>>> Stashed changes
   accessKeyId: process.env.ACCESSKEYID,
   secretAccessKey: process.env.SECRETACCESSKEY,
 });
@@ -159,7 +163,7 @@ const indexCategories = async (req, res) => {
 };
 const imageUpload = async (req, res) => {
   const { userId, loggedIn } = req.cookies;
-  console.log('in jpg handler');
+  console.log('checking user signin status');
   if (req.isUserLoggedIn === true)
   {
     // categories from drop down list
@@ -556,9 +560,12 @@ app.get('/colorFilter', indexColorHandler);
 app.post('/colorFilter', indexColorHandler);
 app.get('/upload', imageUpload);
 // different function for aws deployment and localhost
+// app.post('/upload',
+//   isDeployedLocally ? mutlerUpload.single('photo') : mutlerS3Upload.single('photo'),
+//   isDeployedLocally ? acceptUpload : acceptS3Upload);
 app.post('/upload',
-  isDeployedLocally ? mutlerUpload.single('photo') : mutlerS3Upload.single('photo'),
-  isDeployedLocally ? acceptUpload : acceptS3Upload);
+  mutlerS3Upload.single('photo'),
+  acceptS3Upload);
 // app.post('/upload', mutlerUpload.single('photo'), acceptUpload);
 
 app.get('/signup', signUpForm);

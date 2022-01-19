@@ -193,7 +193,7 @@ const calHarmonyDiff = (refHsl) => {
 };
 export async function getColorTemplates(pool, imageId, filepath, num)
 {
-  console.log('getColorTemplates in filepath', filepath);
+  console.log('getColorTemplates in filepath!', filepath);
   // const img = new Image();
 
   // img.addEventListener('load', () => {
