@@ -169,18 +169,19 @@ export default function initPostsController(db, pool) {
   const createS3 = async (req, res) => {
     const { file } = req;
     console.log(file);
-    const result = await uploadFile(file);
-    await unlinkFile(file.path);
-    console.log('result :>> ', result);
-    const { description } = req.body;
-    console.log('in createS3');
-    console.log('getSignedUrl(result.key) :>> ', getSignedUrl(result.key));
+
     const { userId } = req.cookies;
     let { imgUrl, category } = req.body;
     category = captitalizeFirstLetter(category);
     // TODO if processImage has error, convey error to page, DELETE from db record
     if (req.file)
     {
+      console.log('file in createS3 :>> ', file);
+      const result = await uploadFile(file);
+      await unlinkFile(file.path);
+      console.log('result :>> ', result);
+      console.log('in createS3');
+      console.log('getSignedUrl(result.key) :>> ', getSignedUrl(result.key));
       const location = getSignedUrl(result.key);
       // const {
       //   bucket, key, filename, location,
@@ -197,19 +198,35 @@ export default function initPostsController(db, pool) {
     if (imgUrl) {
       // TODO TO TEST
       const filename = `${Date.now()}.jpg`;
-      const location = `https://${process.env.AWS_S3_BUCKET_NAME}.s3.ap-southeast-1.amazonaws.com/${filename}`;
-      // const location = `https://buckethueinstant.s3.ap-southeast-1.amazonaws.com/${filename}`;
+
       const maxSize = 500;
 
-      await downloadS3SmallImg(imgUrl, filename, maxSize)
-        .then(() => processImage(pool, location, category, userId, true))
-        .then((imageId) => {
-          res.redirect(`/picture/${imageId}`);
-        })
-        .catch((e) => {
-          console.error(e);
-          res.render('upload.ejs', { err: 'Unable to get image from url' });
-        });
+      const fileObj = {
+        path: filename,
+        filename,
+      };
+      console.log('before downloadsmallimg');
+      try {
+        await downloadSmallImg(imgUrl, filename, maxSize);
+        // need to upload image to s3
+        console.log('before upload file');
+        const result = await uploadFile(fileObj);
+        await unlinkFile(fileObj.path);
+        console.log('before get signed url');
+        const location = getSignedUrl(result.key);
+
+        await processImage(pool, location, category, userId, result.key)
+          .then((imageId) => {
+            res.redirect(`/picture/${imageId}`);
+          })
+          .catch((e) => {
+            console.error(e);
+            res.render('upload.ejs', { err: 'Unable to get image from url' });
+          });
+      } catch (e) {
+        console.error('error in s3 imgurl', e);
+        res.render('upload.ejs', { err: 'Unable to get image from url' });
+      }
     }
     else {
       res.render('upload-no-img-url.ejs', { err: 'No image uploaded' });

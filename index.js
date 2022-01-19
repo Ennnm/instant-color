@@ -560,12 +560,12 @@ app.get('/colorFilter', indexColorHandler);
 app.post('/colorFilter', indexColorHandler);
 app.get('/upload', imageUpload);
 // different function for aws deployment and localhost
-// app.post('/upload',
-//   isDeployedLocally ? mutlerUpload.single('photo') : mutlerS3Upload.single('photo'),
-//   isDeployedLocally ? acceptUpload : acceptS3Upload);
 app.post('/upload',
-  mutlerS3Upload.single('photo'),
-  acceptS3Upload);
+  isDeployedLocally ? mutlerUpload.single('photo') : mutlerS3Upload.single('photo'),
+  isDeployedLocally ? acceptUpload : acceptS3Upload);
+// app.post('/upload',
+//   mutlerS3Upload.single('photo'),
+//   acceptS3Upload);
 // app.post('/upload', mutlerUpload.single('photo'), acceptUpload);
 
 app.get('/signup', signUpForm);

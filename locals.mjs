@@ -10,7 +10,7 @@ const unlinkFile = util.promisify(fs.unlink);
 dotenv.config({ silent: process.env.NODE_ENV === 'production' });
 
 const PORT = process.env.PORT || 3004;
-export const isDeployedLocally = PORT !== 3004;
+export const isDeployedLocally = PORT === 3004;
 
 export const S3 = new aws.S3({
   signatureVersion: 'v4',
