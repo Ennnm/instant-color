@@ -32,11 +32,9 @@ const PORT = process.env.PORT || 3004;
 const isDeployedLocally = PORT !== 3004;
 
 const s3 = new aws.S3({
-<<<<<<< Updated upstream
+
   region: process.env.AWS_REGION,
-=======
-  // region: process.env.AWS_REGION,
->>>>>>> Stashed changes
+
   accessKeyId: process.env.ACCESSKEYID,
   secretAccessKey: process.env.SECRETACCESSKEY,
 });
@@ -97,7 +95,7 @@ const mutlerS3Upload = multer({
   storage: multerS3({
     s3,
     bucket: 'buckethueinstant',
-    // acl: 'public-read',
+    acl: 'public-read',
     metadata: (request, file, callback) => {
       callback(null, { fieldName: file.fieldname });
     },

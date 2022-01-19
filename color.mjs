@@ -200,6 +200,7 @@ export async function getColorTemplates(pool, imageId, filepath, num)
 
   // });
   const colors = await ColorThief.getPalette(filepath, num * 2).catch(handleError);
+  console.log('colors from colorThief :>> ', colors);
   let hslColors = colors.map((c) => colord(`rgb(${c.join()})`).toHsl());
   hslColors = hslColors.filter((c) => c.l > 20 && c.l < 90).slice(0, num);
   if (hslColors.length < num)
