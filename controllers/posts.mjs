@@ -191,7 +191,7 @@ export default function initPostsController(db, pool) {
       // // return;
       // console.log('s3 filelocation', req.file);
       // await resizeS3Obj(bucket, filename, key, key, 500).catch(handleError);
-      await processImage(pool, location, category, userId, true).then((imageId) => res.redirect(`/picture/${imageId}`)).catch((e) => {
+      await processImage(pool, location, category, userId, result.key).then((imageId) => res.redirect(`/picture/${imageId}`)).catch((e) => {
         console.log('error in accepting s3 upload', e);
         res.render('upload-no-img-url.ejs', { err: 'Unable to load this image' });
       });
