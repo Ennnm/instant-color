@@ -70,13 +70,13 @@ export default function bindRoutes(app) {
 
     readStream.pipe(res);
   });
-  app.get('/:path/images/:key', (req, res) => {
-    const { path, key } = req.params;
-    console.log('extended path for image', path);
-    const readStream = getFileStream(key);
+  // app.get('/:path/images/:key', (req, res) => {
+  //   const { path, key } = req.params;
+  //   console.log('extended path for image', path);
+  //   const readStream = getFileStream(key);
 
-    readStream.pipe(res);
-  });
+  //   readStream.pipe(res);
+  // });
 
   app.get('/signup', usersController.create);
   app.post('/signup', usersController.createForm);

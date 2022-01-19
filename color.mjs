@@ -311,7 +311,7 @@ export async function processImage(pool, filename, category, userId, awsKey = nu
   let imageId;
   try {
     const filePath = awsKey ? filename : imgFilePath(filename);
-    const imgFileSave = awsKey ? `images/${awsKey}` : filename;
+    const imgFileSave = awsKey ? `/images/${awsKey}` : filename;
     imageId = await insertImage(pool, imgFileSave, category, userId);
     const hslColors = await getColorTemplates(pool, imageId, filePath, 5);
     // const imageId = await insertImage(pool, filename, category, userId).catch(handleError);

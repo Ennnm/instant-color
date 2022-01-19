@@ -27,6 +27,7 @@ const unlinkFile = util.promisify(fs.unlink);
 
 export default function initPostsController(db, pool) {
   const index = async (req, res) => {
+    console.log('in index of post controller');
     const limitNum = 100;
     const { sort, filter, order } = req.query;
 

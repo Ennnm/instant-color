@@ -104,6 +104,7 @@ export default function initUsersControler(db, pool) {
     const limitNum = 100;
     const username = await getUsernameFromId(pool, id);
     console.log('req.params :>> ', req.params);
+    console.log('in show of user controller');
     const ids = await getIdsAfterSortOrFilter(pool, limitNum, sort, order, filter, id);
 
     const poolPromises = [];
