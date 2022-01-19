@@ -26,5 +26,5 @@ export async function downloadSmallImg(url, filepath, maxSize) {
     .withMetadata()
     .toFile(filepath)
     .then((info) => console.log('info in dlSmallImg', info))
-    .catch((err) => console.error(err));
+    .catch((err) => console.error('err in downloadSmallImg', err));
 }

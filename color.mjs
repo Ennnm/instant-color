@@ -193,7 +193,7 @@ const calHarmonyDiff = (refHsl) => {
 };
 export async function getColorTemplates(pool, imageId, filepath, num)
 {
-  console.log('getColorTemplates in filepath', filepath);
+  console.log('getColorTemplates in filepath!', filepath);
   // const img = new Image();
 
   // img.addEventListener('load', () => {
@@ -307,12 +307,13 @@ async function insertHarmonyColor(pool, imageId, harmony, harmonyColors, diffFro
 const deleteImageFromDb = (pool, imageId) => pool.query(`DELETE FROM images WHERE id=${imageId}`).catch((e) => console.log('error in removing from database', e));
 
 // break process image into few parts
-export async function processImage(pool, filename, category, userId, isAWSDeployed = false)
+export async function processImage(pool, filename, category, userId, awsKey = null)
 {
   let imageId;
   try {
-    const filePath = isAWSDeployed ? filename : imgFilePath(filename);
-    imageId = await insertImage(pool, filename, category, userId);
+    const filePath = awsKey ? filename : imgFilePath(filename);
+    const imgFileSave = awsKey ? `/images/${awsKey}` : filename;
+    imageId = await insertImage(pool, imgFileSave, category, userId);
     const hslColors = await getColorTemplates(pool, imageId, filePath, 5);
     // const imageId = await insertImage(pool, filename, category, userId).catch(handleError);
     // const hslColors = await getColorTemplates(pool, imageId, filePath, 5).catch(handleError);

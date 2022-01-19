@@ -1,6 +1,7 @@
 // db is an argument to this function so
 // that we can make db queries inside
-import fs, { unlinkSync } from 'fs';
+import fs from 'fs';
+import util from 'util';
 
 import {
   getIdsAfterSortOrFilter,
@@ -20,10 +21,13 @@ import {
 import {
   downloadSmallImg,
 } from '../color-mani.mjs';
-import { isDeployedLocally } from '../locals.mjs';
+import { isDeployedLocally, uploadFile, getSignedUrl } from '../locals.mjs';
+
+const unlinkFile = util.promisify(fs.unlink);
 
 export default function initPostsController(db, pool) {
   const index = async (req, res) => {
+    console.log('in index of post controller');
     const limitNum = 100;
     const { sort, filter, order } = req.query;
 
@@ -105,7 +109,7 @@ export default function initPostsController(db, pool) {
   };
   const createForm = async (req, res) => {
     const { userId, loggedIn } = req.cookies;
-    console.log('in jpg handler');
+    console.log('in createform handler');
     if (req.isUserLoggedIn === true)
     {
     // categories from drop down list
@@ -163,20 +167,30 @@ export default function initPostsController(db, pool) {
   };
 
   const createS3 = async (req, res) => {
+    const { file } = req;
+    console.log(file);
+
     const { userId } = req.cookies;
     let { imgUrl, category } = req.body;
     category = captitalizeFirstLetter(category);
     // TODO if processImage has error, convey error to page, DELETE from db record
     if (req.file)
     {
-      const {
-        bucket, key, filename, location,
-      } = req.file;
-      // res.send(req.file);
-      // return;
-      console.log('s3 filelocation', req.file);
-      await resizeS3Obj(bucket, filename, key, key, 500).catch(handleError);
-      await processImage(pool, location, category, userId, true).then((imageId) => res.redirect(`/picture/${imageId}`)).catch((e) => {
+      console.log('file in createS3 :>> ', file);
+      const result = await uploadFile(file);
+      await unlinkFile(file.path);
+      console.log('result :>> ', result);
+      console.log('in createS3');
+      console.log('getSignedUrl(result.key) :>> ', getSignedUrl(result.key));
+      const location = getSignedUrl(result.key);
+      // const {
+      //   bucket, key, filename, location,
+      // } = req.file;
+      // // res.send(req.file);
+      // // return;
+      // console.log('s3 filelocation', req.file);
+      // await resizeS3Obj(bucket, filename, key, key, 500).catch(handleError);
+      await processImage(pool, location, category, userId, result.key).then((imageId) => res.redirect(`/picture/${imageId}`)).catch((e) => {
         console.log('error in accepting s3 upload', e);
         res.render('upload-no-img-url.ejs', { err: 'Unable to load this image' });
       });
@@ -184,19 +198,35 @@ export default function initPostsController(db, pool) {
     if (imgUrl) {
       // TODO TO TEST
       const filename = `${Date.now()}.jpg`;
-      const location = `https://${process.env.AWS_S3_BUCKET_NAME}.s3.ap-southeast-1.amazonaws.com/${filename}`;
-      // const location = `https://buckethueinstant.s3.ap-southeast-1.amazonaws.com/${filename}`;
+
       const maxSize = 500;
 
-      await downloadS3SmallImg(imgUrl, filename, maxSize)
-        .then(() => processImage(pool, location, category, userId, true))
-        .then((imageId) => {
-          res.redirect(`/picture/${imageId}`);
-        })
-        .catch((e) => {
-          console.error(e);
-          res.render('upload.ejs', { err: 'Unable to get image from url' });
-        });
+      const fileObj = {
+        path: filename,
+        filename,
+      };
+      console.log('before downloadsmallimg');
+      try {
+        await downloadSmallImg(imgUrl, filename, maxSize);
+        // need to upload image to s3
+        console.log('before upload file');
+        const result = await uploadFile(fileObj);
+        await unlinkFile(fileObj.path);
+        console.log('before get signed url');
+        const location = getSignedUrl(result.key);
+
+        await processImage(pool, location, category, userId, result.key)
+          .then((imageId) => {
+            res.redirect(`/picture/${imageId}`);
+          })
+          .catch((e) => {
+            console.error(e);
+            res.render('upload.ejs', { err: 'Unable to get image from url' });
+          });
+      } catch (e) {
+        console.error('error in s3 imgurl', e);
+        res.render('upload.ejs', { err: 'Unable to get image from url' });
+      }
     }
     else {
       res.render('upload-no-img-url.ejs', { err: 'No image uploaded' });

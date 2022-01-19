@@ -1,11 +1,14 @@
 import pg from 'pg';
+import { nextTick } from 'process';
 import { restrictToLoggedIn } from './util.mjs';
 import db from './models/index.mjs';
 // import your controllers here
 // import user controller
 import initPostsController from './controllers/posts.mjs';
 import initUsersController from './controllers/users.mjs';
-import { isDeployedLocally, mutlerUpload, mutlerS3Upload } from './locals.mjs';
+import {
+  isDeployedLocally, mutlerUpload, mutlerS3Upload, uploadFile, getFileStream,
+} from './locals.mjs';
 
 const { Pool } = pg;
 
@@ -49,17 +52,31 @@ export default function bindRoutes(app) {
   console.log('in bindRoutes');
   // define your route matchers here using app
   app.get('/?', postsController.index);
-  app.get('/categories', postsController.indexCategories);;;;
+  app.get('/categories', postsController.indexCategories);
   app.get('/colorFilter', postsController.indexByColor);
   app.post('/colorFilter', postsController.indexByColor);
   app.get('/upload', postsController.createForm);
   // different function for aws deployment and localhost
   app.post('/upload',
-    isDeployedLocally ? mutlerUpload.single('photo') : mutlerS3Upload.single('photo'),
+    mutlerUpload.single('photo'),
     isDeployedLocally ? postsController.create : postsController.createS3);
   // app.post('/upload',
-  //   isDeployedLocally ? mutlerUpload.single('photo') : mutlerS3Upload.single('photo'),
-  //   isDeployedLocally ? acceptUpload : acceptS3Upload);
+  //   mutlerUpload.single('photo'),
+  //   postsController.createS3);
+
+  app.get('/images/:key', (req, res) => {
+    const { key } = req.params;
+    const readStream = getFileStream(key);
+
+    readStream.pipe(res);
+  });
+  // app.get('/:path/images/:key', (req, res) => {
+  //   const { path, key } = req.params;
+  //   console.log('extended path for image', path);
+  //   const readStream = getFileStream(key);
+
+  //   readStream.pipe(res);
+  // });
 
   app.get('/signup', usersController.create);
   app.post('/signup', usersController.createForm);
