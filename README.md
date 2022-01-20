@@ -80,40 +80,23 @@ You can find the deployed app [here](https://powerful-dawn-80481.herokuapp.com/)
 
 ## Getting Started
 
-This is an example of how you may give instructions on setting up your project locally.
-To get a local copy up and running follow these simple example steps.
+- Install npm modules
 
-### Prerequisites
+- Initialize database
 
-This is an example of how to list things you need to use the software and how to install them.
+```sh
+npm install npm@latest -g
 
-* npm
+sudo service postgresql start
+createdb instant_color
+psql -d instant_color -f init_tables.sql
+psql -d instant_color -f seed.sql
 
-  ```sh
-  npm install npm@latest -g
-  ```
+npm start
 
-### Installation
+```
 
-1. Get a free API Key at [https://example.com](https://example.com)
 
-2. Clone the repo
-
-   ```sh
-   git clone https://github.com/github_username/repo_name.git
-   ```
-
-3. Install NPM packages
-
-   ```sh
-   npm install
-   ```
-
-4. Enter your API in `config.js`
-
-   ```js
-   const API_KEY = 'ENTER YOUR API';
-   ```
 
 <p align="right">(<a href="#top">back to top</a>)</p>
 
@@ -124,6 +107,8 @@ This is an example of how to list things you need to use the software and how to
 ## Roadmap
 
 - [x] Deployment with S3 image upload after migrating to mvc framework
+- [ ] Resize of images before upload to s3
+- [ ] Removal of files from s3 on deletion
 
 See the [open issues](https://github.com/ennnm/succinct_cut/issues) for a full list of proposed features (and known issues).
 
