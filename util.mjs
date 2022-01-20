@@ -4,7 +4,7 @@ import dotenv from 'dotenv';
 import sharp from 'sharp';
 import fetch from 'node-fetch';
 
-import { S3, uploadFile, getSignedUrl } from './locals.mjs';
+import { S3 } from './locals.mjs';
 
 const { SALT } = process.env;
 
@@ -163,23 +163,7 @@ export const addImgToCategoryObj = async (pool, categoriesObj, isDeployedLocally
     const refCatObj = categoriesObj[i];
     // get all images with that id
     const catImagesQuery = 'SELECT images.id FROM images INNER JOIN image_categories ON image_categories.image_id = images.id INNER JOIN categories ON image_categories.category_id = categories.id WHERE categories.id=$1';
-    // eslint-disable-next-line no-await-in-loop
-    // queries.push( pool.query(catImagesQuery, [refCatObj.id]).catch(handleError))
-    // const sqlQuery = pool.query(catImagesQuery, [refCatObj.id]).catch(handleError)
-    //   .then(
-    //     (result) => {
-    //       const imageIds = result.rows.map((row) => row.id);
-    //       const poolImgPromises = [];
 
-    //       imageIds.forEach((index) => {
-    //         poolImgPromises.push(getColorsFromImgId(pool, index, false));
-    //       });
-    //       return Promise.all(poolImgPromises);
-    //     },
-    //   ).then((result) => {
-    //     refCatObj.posts = result;
-    //   })
-    //   .catch(handleError);
     // eslint-disable-next-line no-await-in-loop
     await pool.query(catImagesQuery, [refCatObj.id]).catch(handleError)
       .then(
@@ -198,7 +182,6 @@ export const addImgToCategoryObj = async (pool, categoriesObj, isDeployedLocally
       })
       .catch(handleError);
   }
-  // Promise.all(queries)
   return categoriesObj;
 };
 
@@ -250,16 +233,12 @@ export const getUsernameFromId = async (pool, id) => {
     }).catch(handleError);
   return username;
 };
-
+// TODO
 export async function downloadS3SmallImg(url, writeKey, maxSize) {
   const response = await fetch(url);
   const buffer = await response.buffer();
   const format = 'jpg';
   console.log('in downloadS3SmallImg');
-  // resize for both cases not working.
-  // url upload not possible yet, need to get url file path from s3
-  // something about permissions
-  // message: 'Missing credentials in config, if using AWS_CONFIG_FILE, set AWS_SDK_LOAD_CONFIG=1' errno: -111,
   const s3Params = {
     Bucket: process.env.AWS_S3_BUCKET_NAME,
     ContentType: `image/${format}`,

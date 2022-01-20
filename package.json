@@ -1,7 +1,7 @@
 {
   "name": "instant-hue",
   "version": "1.0.0",
-  "description": "# base-node-bootcamp",
+  "description": "# instant hue rocket academy bootcamp project 2",
   "main": "index.mjs",
   "engines": {
     "node": "16.6.2"

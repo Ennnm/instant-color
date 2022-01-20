@@ -8,10 +8,7 @@ import harmonies from 'colord/plugins/harmonies';
 import lchPlugin from 'colord/plugins/lch';
 import fs, { watchFile } from 'fs';
 import sharp from 'sharp';
-import { resolve } from 'path';
 import { handleError } from './util.mjs';
-
-import { S3 } from './locals.mjs';
 
 extend([harmonies, lchPlugin]);
 
@@ -315,8 +312,6 @@ export async function processImage(pool, filename, category, userId, awsKey = nu
     const imgFileSave = awsKey ? `/images/${awsKey}` : filename;
     imageId = await insertImage(pool, imgFileSave, category, userId);
     const hslColors = await getColorTemplates(pool, imageId, filePath, 5);
-    // const imageId = await insertImage(pool, filename, category, userId).catch(handleError);
-    // const hslColors = await getColorTemplates(pool, imageId, filePath, 5).catch(handleError);
 
     const baseColors = hslColors.base;
 
@@ -335,7 +330,6 @@ export async function processImage(pool, filename, category, userId, awsKey = nu
     const insertHarmonyColors = Object.keys(harmonyColors).map((key) => insertHarmonyColor(pool, imageId, key, covertHslToHex(harmonyColors[key]), harmonicDiffObj[key]));
 
     const insertColors = await Promise.all([insertBaseCol, ...insertHarmonyColors]);
-    // const insertColors = await Promise.all([insertBaseCol, ...insertHarmonyColors]).catch(handleError);
   }
   catch (e) {
     console.log('error in processing image', e);

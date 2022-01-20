@@ -10,8 +10,6 @@ import {
   addImgToCategoryObj,
   convertToHueBnds,
   captitalizeFirstLetter,
-  resizeS3Obj,
-  downloadS3SmallImg,
 } from '../util.mjs';
 import {
   imgFilePath,
@@ -20,7 +18,7 @@ import {
 } from '../color.mjs';
 import {
   downloadSmallImg,
-} from '../color-mani.mjs';
+} from '../download-from-url.mjs';
 import { isDeployedLocally, uploadFile, getSignedUrl } from '../locals.mjs';
 
 const unlinkFile = util.promisify(fs.unlink);
@@ -108,7 +106,7 @@ export default function initPostsController(db, pool) {
     pool.query(sqlQuery, whenDeleted);
   };
   const createForm = async (req, res) => {
-    const { userId, loggedIn } = req.cookies;
+    const { userId } = req.cookies;
     console.log('in createform handler');
     if (req.isUserLoggedIn === true)
     {
@@ -127,7 +125,7 @@ export default function initPostsController(db, pool) {
     }
   };
   const create = async (req, res) => {
-    const { userId, loggedIn } = req.cookies;
+    const { userId } = req.cookies;
     let { imgUrl, category } = req.body;
     category = captitalizeFirstLetter(category);
     if (req.file)
@@ -183,20 +181,13 @@ export default function initPostsController(db, pool) {
       console.log('in createS3');
       console.log('getSignedUrl(result.key) :>> ', getSignedUrl(result.key));
       const location = getSignedUrl(result.key);
-      // const {
-      //   bucket, key, filename, location,
-      // } = req.file;
-      // // res.send(req.file);
-      // // return;
-      // console.log('s3 filelocation', req.file);
-      // await resizeS3Obj(bucket, filename, key, key, 500).catch(handleError);
+
       await processImage(pool, location, category, userId, result.key).then((imageId) => res.redirect(`/picture/${imageId}`)).catch((e) => {
         console.log('error in accepting s3 upload', e);
         res.render('upload-no-img-url.ejs', { err: 'Unable to load this image' });
       });
     }
     if (imgUrl) {
-      // TODO TO TEST
       const filename = `${Date.now()}.jpg`;
 
       const maxSize = 500;

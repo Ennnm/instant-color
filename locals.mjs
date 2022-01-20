@@ -5,8 +5,6 @@ import fs from 'fs';
 import util from 'util';
 import dotenv, { config } from 'dotenv';
 
-const unlinkFile = util.promisify(fs.unlink);
-
 dotenv.config({ silent: process.env.NODE_ENV === 'production' });
 
 const PORT = process.env.PORT || 3004;

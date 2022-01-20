@@ -1,5 +1,4 @@
 import pg from 'pg';
-import { nextTick } from 'process';
 import { restrictToLoggedIn } from './util.mjs';
 import db from './models/index.mjs';
 // import your controllers here
@@ -7,7 +6,7 @@ import db from './models/index.mjs';
 import initPostsController from './controllers/posts.mjs';
 import initUsersController from './controllers/users.mjs';
 import {
-  isDeployedLocally, mutlerUpload, mutlerS3Upload, uploadFile, getFileStream,
+  isDeployedLocally, mutlerUpload, getFileStream,
 } from './locals.mjs';
 
 const { Pool } = pg;
@@ -46,9 +45,9 @@ const pool = new Pool(pgConnectionConfigs);
 export default function bindRoutes(app) {
   // initialize the controller functions here
   // make const to hold functions
+  // pass in the db for all callbacks
   const postsController = initPostsController(db, pool);
   const usersController = initUsersController(db, pool);
-  // pass in the db for all callbacks
   console.log('in bindRoutes');
   // define your route matchers here using app
   app.get('/?', postsController.index);
@@ -60,23 +59,14 @@ export default function bindRoutes(app) {
   app.post('/upload',
     mutlerUpload.single('photo'),
     isDeployedLocally ? postsController.create : postsController.createS3);
-  // app.post('/upload',
-  //   mutlerUpload.single('photo'),
-  //   postsController.createS3);
 
+  // route to get image from s3
   app.get('/images/:key', (req, res) => {
     const { key } = req.params;
     const readStream = getFileStream(key);
 
     readStream.pipe(res);
   });
-  // app.get('/:path/images/:key', (req, res) => {
-  //   const { path, key } = req.params;
-  //   console.log('extended path for image', path);
-  //   const readStream = getFileStream(key);
-
-  //   readStream.pipe(res);
-  // });
 
   app.get('/signup', usersController.create);
   app.post('/signup', usersController.createForm);
